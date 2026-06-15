@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+package hermes.deck.agent.v1;
+
+service AgentService {
+  rpc ChatStream(stream ChatStreamRequest) returns (stream ChatStreamEvent);
+  rpc GetRunStatus(GetRunStatusRequest) returns (RunStatusResponse);
+  rpc GetTimeline(GetTimelineRequest) returns (TimelineResponse);
+  rpc SubmitApproval(SubmitApprovalRequest) returns (ApprovalResult);
+  rpc SubmitPanelIntent(SubmitPanelIntentRequest) returns (PanelIntentResult);
+}
+
+message ChatStreamRequest {
+  string conversation_id = 1;
+  string run_id = 2;
+  string identity_id = 3;
+  string content = 4;
+}
+
+message ChatStreamEvent {
+  string event_id = 1;
+  string run_id = 2;
+  string type = 3;
+  string summary = 4;
+  string content_delta = 5;
+  RunStatus status = 6;
+  ApprovalPrompt approval = 7;
+}
+
+message GetRunStatusRequest {
+  string run_id = 1;
+}
+
+message RunStatusResponse {
+  string run_id = 1;
+  RunStatus status = 2;
+  string review_reason = 3;
+  string failure_reason = 4;
+}
+
+message GetTimelineRequest {
+  string run_id = 1;
+}
+
+message TimelineResponse {
+  repeated TimelineItem items = 1;
+}
+
+message TimelineItem {
+  string event_id = 1;
+  string run_id = 2;
+  string type = 3;
+  string summary = 4;
+  string severity = 5;
+  string occurred_at = 6;
+}
+
+message SubmitApprovalRequest {
+  string approval_id = 1;
+  string identity_id = 2;
+  ApprovalDecision decision = 3;
+  string reason = 4;
+}
+
+message ApprovalResult {
+  string approval_id = 1;
+  ApprovalStatus status = 2;
+  string result_summary = 3;
+}
+
+message ApprovalPrompt {
+  string approval_id = 1;
+  string action_type = 2;
+  string impact_summary = 3;
+  string affected_target = 4;
+}
+
+message SubmitPanelIntentRequest {
+  string panel_id = 1;
+  string identity_id = 2;
+  string action = 3;
+  string payload_json = 4;
+}
+
+message PanelIntentResult {
+  string intent_id = 1;
+  string panel_id = 2;
+  string status = 3;
+  string result_summary = 4;
+  string denial_reason = 5;
+  string approval_id = 6;
+}
+
+enum RunStatus {
+  RUN_STATUS_UNSPECIFIED = 0;
+  RUN_STATUS_WAITING = 1;
+  RUN_STATUS_RUNNING = 2;
+  RUN_STATUS_REVIEW_REQUIRED = 3;
+  RUN_STATUS_COMPLETED = 4;
+  RUN_STATUS_FAILED = 5;
+}
+
+enum ApprovalDecision {
+  APPROVAL_DECISION_UNSPECIFIED = 0;
+  APPROVAL_DECISION_APPROVE = 1;
+  APPROVAL_DECISION_REJECT = 2;
+}
+
+enum ApprovalStatus {
+  APPROVAL_STATUS_UNSPECIFIED = 0;
+  APPROVAL_STATUS_PENDING = 1;
+  APPROVAL_STATUS_APPROVED = 2;
+  APPROVAL_STATUS_REJECTED = 3;
+  APPROVAL_STATUS_EXPIRED = 4;
+  APPROVAL_STATUS_EXECUTED = 5;
+  APPROVAL_STATUS_EXECUTION_FAILED = 6;
+}

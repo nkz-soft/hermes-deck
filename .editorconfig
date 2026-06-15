@@ -1,0 +1,70 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# C# source files
+[*.cs]
+indent_style = space
+indent_size = 4
+
+# TypeScript and JavaScript
+[*.{ts,tsx,js,jsx,mjs,cjs}]
+indent_style = space
+indent_size = 2
+
+# JSON
+[*.json]
+indent_style = space
+indent_size = 2
+
+# Python
+[*.py]
+indent_style = space
+indent_size = 4
+
+# Protobuf
+[*.proto]
+indent_style = space
+indent_size = 2
+
+# YAML
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# XML / project files
+[*.{xml,csproj,props,targets,slnx}]
+indent_style = space
+indent_size = 2
+
+# Markdown
+[*.md]
+trim_trailing_whitespace = false
+
+# Generated C# files (Roslyn source generators, proto stubs)
+[**/*.g.cs]
+generated_code = true
+
+# Build output directories (obj/bin) — relax rules for generated artifacts
+[**/obj/**]
+generated_code = true
+
+[**/bin/**]
+generated_code = true
+
+# Generated proto stubs (Python and C#)
+[**/generated/**]
+generated_code = true
+
+[**/*_pb2.py]
+generated_code = true
+
+[**/*_pb2_grpc.py]
+generated_code = true
+
+[**/*.pb.cs]
+generated_code = true
