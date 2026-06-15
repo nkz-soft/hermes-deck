@@ -77,6 +77,11 @@
 
 - What happens when [boundary condition]?
 - How does system handle [error scenario]?
+- How does the system deny unauthorized Telegram sessions, deep links, or panel access
+  without exposing protected task details?
+- Which actions require approval before execution, and what happens when approval is
+  rejected, expired, duplicated, or no longer matches the proposed action?
+- How do panel trust levels affect rendering and allowed interactions?
 
 ## Requirements *(mandatory)*
 
@@ -92,6 +97,12 @@
 - **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
 - **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
 - **FR-005**: System MUST [behavior, e.g., "log all security events"]
+- **FR-SEC**: System MUST enforce backend authorization for every Telegram-launched
+  session, deep link, approval, dashboard, panel, and action.
+- **FR-APPROVAL**: System MUST block approval-required actions until an authorized
+  approval decision is recorded.
+- **FR-OBS**: System MUST expose user-readable statuses, timeline events, and failure
+  states for agent operations affected by this feature.
 
 *Example of marking unclear requirements:*
 
@@ -129,3 +140,11 @@
 - [Assumption about scope boundaries, e.g., "Mobile support is out of scope for v1"]
 - [Assumption about data/environment, e.g., "Existing authentication system will be reused"]
 - [Dependency on existing system/service, e.g., "Requires access to the existing user profile API"]
+
+## Constitution Alignment *(mandatory)*
+
+- **Mobile Control Center Scope**: [Which Hermes Deck control-center workflow this feature supports]
+- **Backend-Enforced Trust Boundary**: [Authentication, authorization, trust-level, and intent-validation assumptions]
+- **Contract-First Service Boundaries**: [Contracts that will be created or changed]
+- **Test-Driven Safety**: [Safety-critical tests expected for this feature]
+- **Observable Agent Operations**: [Timeline, status, logging, and failure-state expectations]
