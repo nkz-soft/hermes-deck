@@ -1,0 +1,343 @@
+openapi: 3.1.0
+info:
+  title: Hermes Deck API
+  version: 0.1.0
+  description: Contract for the Telegram Mini App control center API.
+servers:
+  - url: https://example.local
+paths:
+  /auth/telegram:
+    post:
+      summary: Validate Telegram launch data and create a Hermes Deck session
+      operationId: createTelegramSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [initData]
+              properties:
+                initData:
+                  type: string
+      responses:
+        "200":
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "401":
+          description: Invalid, expired, or unauthorized Telegram launch data
+  /conversations:
+    get:
+      summary: List conversations visible to the current identity
+      operationId: listConversations
+      responses:
+        "200":
+          description: Conversation list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Conversation"
+    post:
+      summary: Create a conversation
+      operationId: createConversation
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+      responses:
+        "201":
+          description: Conversation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+  /conversations/{conversationId}/messages:
+    post:
+      summary: Send a user message and start or continue an agent run
+      operationId: sendMessage
+      parameters:
+        - $ref: "#/components/parameters/conversationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                  minLength: 1
+      responses:
+        "202":
+          description: Message accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunAccepted"
+  /runs/{runId}:
+    get:
+      summary: Get current run status
+      operationId: getRun
+      parameters:
+        - $ref: "#/components/parameters/runId"
+      responses:
+        "200":
+          description: Run status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentRun"
+  /runs/{runId}/timeline:
+    get:
+      summary: Get run timeline
+      operationId: getTimeline
+      parameters:
+        - $ref: "#/components/parameters/runId"
+      responses:
+        "200":
+          description: Timeline events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TimelineEvent"
+  /approvals/{approvalId}/decision:
+    post:
+      summary: Approve or reject a pending action
+      operationId: decideApproval
+      parameters:
+        - $ref: "#/components/parameters/approvalId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision:
+                  type: string
+                  enum: [approve, reject]
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApprovalRequest"
+        "409":
+          description: Approval is no longer pending
+  /events/stream:
+    get:
+      summary: Stream user-visible run, approval, and notification events
+      operationId: streamEvents
+      responses:
+        "200":
+          description: Server-Sent Events stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+  /panels:
+    get:
+      summary: List panels available to the current identity
+      operationId: listPanels
+      responses:
+        "200":
+          description: Panel list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Panel"
+  /panels/{panelId}/intents:
+    post:
+      summary: Submit a host-validated panel intent
+      operationId: submitPanelIntent
+      parameters:
+        - $ref: "#/components/parameters/panelId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PanelIntentRequest"
+      responses:
+        "202":
+          description: Intent accepted, denied, executed, or routed to approval
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PanelIntent"
+components:
+  parameters:
+    conversationId:
+      name: conversationId
+      in: path
+      required: true
+      schema:
+        type: string
+    runId:
+      name: runId
+      in: path
+      required: true
+      schema:
+        type: string
+    approvalId:
+      name: approvalId
+      in: path
+      required: true
+      schema:
+        type: string
+    panelId:
+      name: panelId
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    SessionResponse:
+      type: object
+      required: [sessionToken, expiresAt, identity]
+      properties:
+        sessionToken:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        identity:
+          $ref: "#/components/schemas/HermesIdentity"
+    HermesIdentity:
+      type: object
+      required: [identityId, displayName, permissions]
+      properties:
+        identityId:
+          type: string
+        displayName:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+    Conversation:
+      type: object
+      required: [conversationId, status, updatedAt]
+      properties:
+        conversationId:
+          type: string
+        title:
+          type: string
+        status:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+    RunAccepted:
+      type: object
+      required: [messageId, runId]
+      properties:
+        messageId:
+          type: string
+        runId:
+          type: string
+    AgentRun:
+      type: object
+      required: [runId, conversationId, status]
+      properties:
+        runId:
+          type: string
+        conversationId:
+          type: string
+        status:
+          type: string
+          enum: [waiting, running, review-required, completed, failed]
+        reviewReason:
+          type: string
+    TimelineEvent:
+      type: object
+      required: [eventId, runId, type, summary, occurredAt]
+      properties:
+        eventId:
+          type: string
+        runId:
+          type: string
+        type:
+          type: string
+        summary:
+          type: string
+        severity:
+          type: string
+          enum: [info, warning, error]
+        occurredAt:
+          type: string
+          format: date-time
+    ApprovalRequest:
+      type: object
+      required: [approvalId, runId, actionType, impactSummary, affectedTarget, status]
+      properties:
+        approvalId:
+          type: string
+        runId:
+          type: string
+        actionType:
+          type: string
+        impactSummary:
+          type: string
+        affectedTarget:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected, expired, executed, execution-failed]
+    Panel:
+      type: object
+      required: [panelId, name, trustLevel, renderingMode]
+      properties:
+        panelId:
+          type: string
+        name:
+          type: string
+        trustLevel:
+          type: string
+          enum: [native, internal-mcp-app, trusted-external-mcp-app, untrusted-external]
+        renderingMode:
+          type: string
+          enum: [native, sandboxed-iframe, text-json-only]
+    PanelIntentRequest:
+      type: object
+      required: [action, payload]
+      properties:
+        action:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+    PanelIntent:
+      type: object
+      required: [intentId, panelId, action, status]
+      properties:
+        intentId:
+          type: string
+        panelId:
+          type: string
+        action:
+          type: string
+        status:
+          type: string
+          enum: [submitted, validated, denied, pending-approval, executed, rejected]
+        denialReason:
+          type: string

@@ -40,7 +40,20 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+The plan MUST explicitly answer each gate:
+
+- **Mobile Control Center Scope**: Explain how the feature supports agent chat, run
+  inspection, approvals, dashboards, MCP-powered panels, notifications, or deep links.
+- **Backend-Enforced Trust Boundary**: Identify Telegram launch validation, Hermes
+  identity mapping, authorization checks, panel trust levels, and host-validated intents.
+- **Contract-First Service Boundaries**: List API, protobuf, SSE, panel intent,
+  notification, or deep-link contracts that must be created or updated.
+- **Test-Driven Safety**: List failing contract, integration, and user-story tests that
+  must exist before implementation.
+- **Observable Agent Operations**: Identify timeline, status, approval, logging, and
+  user-readable failure events required by the feature.
+
+Any failed gate MUST be recorded in Complexity Tracking with justification and mitigation.
 
 ## Project Structure
 
@@ -65,39 +78,21 @@ specs/[###-feature]/
 -->
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
 src/
-├── models/
-├── services/
-├── cli/
-└── lib/
-
-tests/
-├── contract/
-├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
 ├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+│   ├── HermesDeck.Api/
+│   ├── HermesDeck.AppHost/
+│   ├── HermesDeck.ServiceDefaults/
+│   ├── HermesDeck.Web/
+│   └── agent-service/
+├── proto/
+├── tests/
+│   ├── contract/
+│   ├── integration/
+│   └── e2e/
+├── docker/
+├── docker-compose.yml
+└── hermes-deck.sln
 ```
 
 **Structure Decision**: [Document the selected structure and reference the real
