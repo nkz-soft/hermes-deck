@@ -20,23 +20,23 @@ tested, and demonstrated independently after the shared foundation is complete.
 
 **Purpose**: Create the monorepo structure, baseline projects, and local development entry points.
 
-- [ ] T001 Create solution file and repository project layout in `hermes-deck.sln`
-- [ ] T002 Create Hermes API project skeleton in `src/HermesDeck.Api/HermesDeck.Api.csproj`
-- [ ] T003 Create Aspire AppHost project skeleton in `src/HermesDeck.AppHost/HermesDeck.AppHost.csproj`
-- [ ] T004 Create Aspire ServiceDefaults project skeleton in `src/HermesDeck.ServiceDefaults/HermesDeck.ServiceDefaults.csproj`
-- [ ] T005 Create Telegram Mini App project skeleton in `src/HermesDeck.Web/package.json`
-- [ ] T006 Create Agent Service Python package skeleton in `src/agent-service/pyproject.toml`
-- [ ] T007 Create shared protobuf source location in `proto/agent-service.proto`
-- [ ] T008 [P] Create API Dockerfile in `docker/api.Dockerfile`
-- [ ] T009 [P] Create Agent Service Dockerfile in `docker/agent-service.Dockerfile`
-- [ ] T010 [P] Create Web Dockerfile in `docker/web.Dockerfile`
-- [ ] T011 Create local server deployment composition in `docker-compose.yml`
-- [ ] T012 [P] Create repository editor and generated-file rules in `.editorconfig`
-- [ ] T013 [P] Create frontend TypeScript configuration in `src/HermesDeck.Web/tsconfig.json`
-- [ ] T014 [P] Create Agent Service pytest configuration in `src/agent-service/pytest.ini`
-- [ ] T015 [P] Create API test project skeleton in `tests/contract/HermesDeck.Api.ContractTests/HermesDeck.Api.ContractTests.csproj`
-- [ ] T016 [P] Create integration test project skeleton in `tests/integration/HermesDeck.IntegrationTests/HermesDeck.IntegrationTests.csproj`
-- [ ] T017 [P] Create frontend e2e test project skeleton in `tests/e2e/hermes-deck-web/package.json`
+- [x] T001 Create solution file and repository project layout in `hermes-deck.sln`
+- [x] T002 Create Hermes API project skeleton in `src/HermesDeck.Api/HermesDeck.Api.csproj`
+- [x] T003 Create Aspire AppHost project skeleton in `src/HermesDeck.AppHost/HermesDeck.AppHost.csproj`
+- [x] T004 Create Aspire ServiceDefaults project skeleton in `src/HermesDeck.ServiceDefaults/HermesDeck.ServiceDefaults.csproj`
+- [x] T005 Create Telegram Mini App project skeleton in `src/HermesDeck.Web/package.json`
+- [x] T006 Create Agent Service Python package skeleton in `src/agent-service/pyproject.toml`
+- [x] T007 Create shared protobuf source location in `proto/agent-service.proto`
+- [x] T008 [P] Create API Dockerfile in `docker/api.Dockerfile`
+- [x] T009 [P] Create Agent Service Dockerfile in `docker/agent-service.Dockerfile`
+- [x] T010 [P] Create Web Dockerfile in `docker/web.Dockerfile`
+- [x] T011 Create local server deployment composition in `docker-compose.yml`
+- [x] T012 [P] Create repository editor and generated-file rules in `.editorconfig`
+- [x] T013 [P] Create frontend TypeScript configuration in `src/HermesDeck.Web/tsconfig.json`
+- [x] T014 [P] Create Agent Service pytest configuration in `src/agent-service/pytest.ini`
+- [x] T015 [P] Create API test project skeleton in `tests/contract/HermesDeck.Api.ContractTests/HermesDeck.Api.ContractTests.csproj`
+- [x] T016 [P] Create integration test project skeleton in `tests/integration/HermesDeck.IntegrationTests/HermesDeck.IntegrationTests.csproj`
+- [x] T017 [P] Create frontend e2e test project skeleton in `tests/e2e/hermes-deck-web/package.json`
 
 **Checkpoint**: Projects and test containers exist, but no feature behavior is implemented.
 
