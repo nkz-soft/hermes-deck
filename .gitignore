@@ -1,3 +1,10 @@
+# .NET build artifacts
+[Bb]in/
+[Oo]bj/
+*.user
+# Alternate Visual Studio solution format (canonical solution is hermes-deck.sln)
+*.slnx
+
 # Node.js
 node_modules/
 
