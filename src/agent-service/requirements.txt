@@ -1,0 +1,5 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+grpcio>=1.68
+grpcio-tools>=1.68
+mcp>=1.9
