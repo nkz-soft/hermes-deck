@@ -3,3 +3,7 @@ uvicorn[standard]>=0.30
 grpcio>=1.68
 grpcio-tools>=1.68
 mcp>=1.9
+
+# Test/dev-only (mirrors [project.optional-dependencies.dev] in pyproject.toml)
+pytest>=8
+httpx>=0.27
