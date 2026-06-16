@@ -5,6 +5,9 @@
 # Alternate Visual Studio solution format (canonical solution is hermes-deck.sln)
 *.slnx
 
+# Generated protobuf/gRPC Python stubs (regenerate via src/agent-service/scripts/generate_proto.py)
+src/agent-service/app/grpc/generated/
+
 # Node.js
 node_modules/
 

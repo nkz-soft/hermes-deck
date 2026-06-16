@@ -48,34 +48,34 @@ tested, and demonstrated independently after the shared foundation is complete.
 
 **Critical**: No user story implementation starts until this phase is complete.
 
-- [ ] T018 Copy and normalize Agent Service protobuf contract in `proto/agent-service.proto`
-- [ ] T019 Add protobuf generation settings to API project in `src/HermesDeck.Api/HermesDeck.Api.csproj`
-- [ ] T020 Add Agent Service protobuf generation script in `src/agent-service/scripts/generate_proto.py`
-- [ ] T021 Create API OpenAPI contract validation test in `tests/contract/HermesDeck.Api.ContractTests/OpenApiContractTests.cs`
-- [ ] T022 Create protobuf compatibility test in `tests/contract/HermesDeck.Api.ContractTests/AgentProtoContractTests.cs`
-- [ ] T023 Create SSE event contract test fixture in `tests/contract/HermesDeck.Api.ContractTests/SseEventContractTests.cs`
-- [ ] T024 Create panel intent contract test fixture in `tests/contract/HermesDeck.Api.ContractTests/PanelIntentContractTests.cs`
-- [ ] T025 Create Telegram notification contract in `specs/001-hermes-control-deck/contracts/telegram-notifications.md`
-- [ ] T026 Create deep-link routing contract in `specs/001-hermes-control-deck/contracts/deep-links.md`
-- [ ] T027 Create Telegram notification contract validation test in `tests/contract/HermesDeck.Api.ContractTests/TelegramNotificationContractTests.cs`
-- [ ] T028 Create deep-link contract validation test in `tests/contract/HermesDeck.Api.ContractTests/DeepLinkContractTests.cs`
-- [ ] T029 Create shared domain entity models in `src/HermesDeck.Api/Domain/ControlDeckEntities.cs`
-- [ ] T030 Create PostgreSQL persistence context in `src/HermesDeck.Api/Persistence/HermesDeckDbContext.cs`
-- [ ] T031 Create initial persistence migration in `src/HermesDeck.Api/Persistence/Migrations/0001_InitialControlDeck.cs`
-- [ ] T032 Create API configuration model in `src/HermesDeck.Api/Configuration/HermesDeckOptions.cs`
-- [ ] T033 Create Telegram launch validation service interface in `src/HermesDeck.Api/Auth/ITelegramLaunchValidator.cs`
-- [ ] T034 Create authorization policy service interface in `src/HermesDeck.Api/Auth/IHermesAuthorizationService.cs`
-- [ ] T035 Create session token service interface in `src/HermesDeck.Api/Auth/ISessionTokenService.cs`
-- [ ] T036 Create API error response middleware in `src/HermesDeck.Api/Infrastructure/ErrorHandlingMiddleware.cs`
-- [ ] T037 Create audit event writer interface in `src/HermesDeck.Api/Observability/IAuditEventWriter.cs`
-- [ ] T038 Create run event publisher interface in `src/HermesDeck.Api/Events/IRunEventPublisher.cs`
-- [ ] T039 Create Agent Service gRPC client wrapper in `src/HermesDeck.Api/Agent/AgentServiceClient.cs`
-- [ ] T040 Create Agent Service FastAPI application entry point in `src/agent-service/app/main.py`
-- [ ] T041 Create Agent Service gRPC server entry point in `src/agent-service/app/grpc/server.py`
-- [ ] T042 Create Agent Service run state fixture in `src/agent-service/app/hermes_agent/run_state.py`
-- [ ] T043 Create Telegram auth denial integration test fixture in `tests/integration/HermesDeck.IntegrationTests/AuthDenialTests.cs`
-- [ ] T044 Create approval blocking integration test fixture in `tests/integration/HermesDeck.IntegrationTests/ApprovalBlockingTests.cs`
-- [ ] T045 Create protected-detail redaction integration test fixture in `tests/integration/HermesDeck.IntegrationTests/ProtectedDetailRedactionTests.cs`
+- [x] T018 Copy and normalize Agent Service protobuf contract in `proto/agent-service.proto`
+- [x] T019 Add protobuf generation settings to API project in `src/HermesDeck.Api/HermesDeck.Api.csproj`
+- [x] T020 Add Agent Service protobuf generation script in `src/agent-service/scripts/generate_proto.py`
+- [x] T021 Create API OpenAPI contract validation test in `tests/contract/HermesDeck.Api.ContractTests/OpenApiContractTests.cs`
+- [x] T022 Create protobuf compatibility test in `tests/contract/HermesDeck.Api.ContractTests/AgentProtoContractTests.cs`
+- [x] T023 Create SSE event contract test fixture in `tests/contract/HermesDeck.Api.ContractTests/SseEventContractTests.cs`
+- [x] T024 Create panel intent contract test fixture in `tests/contract/HermesDeck.Api.ContractTests/PanelIntentContractTests.cs`
+- [x] T025 Create Telegram notification contract in `specs/001-hermes-control-deck/contracts/telegram-notifications.md` (already present from the contracts commit; verified by T027)
+- [x] T026 Create deep-link routing contract in `specs/001-hermes-control-deck/contracts/deep-links.md` (already present from the contracts commit; verified by T028)
+- [x] T027 Create Telegram notification contract validation test in `tests/contract/HermesDeck.Api.ContractTests/TelegramNotificationContractTests.cs`
+- [x] T028 Create deep-link contract validation test in `tests/contract/HermesDeck.Api.ContractTests/DeepLinkContractTests.cs`
+- [x] T029 Create shared domain entity models in `src/HermesDeck.Api/Domain/ControlDeckEntities.cs`
+- [x] T030 Create PostgreSQL persistence context in `src/HermesDeck.Api/Persistence/HermesDeckDbContext.cs`
+- [x] T031 Create initial persistence migration in `src/HermesDeck.Api/Persistence/Migrations/0001_InitialControlDeck.cs`
+- [x] T032 Create API configuration model in `src/HermesDeck.Api/Configuration/HermesDeckOptions.cs`
+- [x] T033 Create Telegram launch validation service interface in `src/HermesDeck.Api/Auth/ITelegramLaunchValidator.cs`
+- [x] T034 Create authorization policy service interface in `src/HermesDeck.Api/Auth/IHermesAuthorizationService.cs`
+- [x] T035 Create session token service interface in `src/HermesDeck.Api/Auth/ISessionTokenService.cs`
+- [x] T036 Create API error response middleware in `src/HermesDeck.Api/Infrastructure/ErrorHandlingMiddleware.cs`
+- [x] T037 Create audit event writer interface in `src/HermesDeck.Api/Observability/IAuditEventWriter.cs`
+- [x] T038 Create run event publisher interface in `src/HermesDeck.Api/Events/IRunEventPublisher.cs`
+- [x] T039 Create Agent Service gRPC client wrapper in `src/HermesDeck.Api/Agent/AgentServiceClient.cs`
+- [x] T040 Create Agent Service FastAPI application entry point in `src/agent-service/app/main.py`
+- [x] T041 Create Agent Service gRPC server entry point in `src/agent-service/app/grpc/server.py`
+- [x] T042 Create Agent Service run state fixture in `src/agent-service/app/hermes_agent/run_state.py`
+- [x] T043 Create Telegram auth denial integration test fixture in `tests/integration/HermesDeck.IntegrationTests/AuthDenialTests.cs`
+- [x] T044 Create approval blocking integration test fixture in `tests/integration/HermesDeck.IntegrationTests/ApprovalBlockingTests.cs`
+- [x] T045 Create protected-detail redaction integration test fixture in `tests/integration/HermesDeck.IntegrationTests/ProtectedDetailRedactionTests.cs`
 
 **Checkpoint**: Foundation is ready for user story implementation.
 
