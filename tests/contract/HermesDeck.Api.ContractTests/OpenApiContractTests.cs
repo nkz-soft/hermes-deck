@@ -93,7 +93,7 @@ public class OpenApiContractTests
     public void SendMessage_RequestBody_ShouldRequireContent()
     {
         var operation = Document.Paths["/conversations/{conversationId}/messages"]!.Operations![HttpMethod.Post];
-        var schema = operation.RequestBody!.Content["application/json"]!.Schema!;
+        var schema = operation.RequestBody!.Content!["application/json"]!.Schema!;
 
         schema.Required!.Should().Contain("content");
     }
@@ -102,7 +102,7 @@ public class OpenApiContractTests
     public void DecideApproval_RequestBody_ShouldRestrictDecisionToApproveOrReject()
     {
         var operation = Document.Paths["/approvals/{approvalId}/decision"]!.Operations![HttpMethod.Post];
-        var schema = operation.RequestBody!.Content["application/json"]!.Schema!;
+        var schema = operation.RequestBody!.Content!["application/json"]!.Schema!;
         var decisionEnum = schema.Properties!["decision"]!.Enum!.Select(e => e!.ToString()).ToArray();
 
         decisionEnum.Should().BeEquivalentTo(new[] { "approve", "reject" });
