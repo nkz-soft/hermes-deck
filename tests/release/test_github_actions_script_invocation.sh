@@ -30,11 +30,18 @@ set -euo pipefail
 #   script's full path or its basename; returns 1 otherwise. Returns 2 on a
 #   usage error (missing script or workflows dir).
 #
-#   The path match is anchored on the basename to avoid false positives, while
-#   still matching common invocation forms such as:
+#   A script counts as invoked only when a workflow references EITHER the
+#   script's repo-relative path OR its basename as a *whole token* -- i.e.
+#   bounded on the left by start-of-line, whitespace, a quote, '/', or '=', and
+#   on the right by end-of-line, whitespace, a quote, ')', ';', or ':'. This is
+#   a boundary-anchored match, NOT a substring search, so a reference to a
+#   longer filename like "predeploy.sh" does NOT count as invoking "deploy.sh".
+#   Regex metacharacters in the path/basename (e.g. the '.' in ".sh") are
+#   escaped so they match literally. Common invocation forms still match:
 #     run: ./scripts/release/publish.sh
 #     run: bash scripts/release/publish.sh
 #     run: scripts/deploy/deploy.sh --env prod
+#     run: ./run.sh "deploy.sh"
 script_is_invoked_by_workflows() {
   local script_path="$1" workflows_dir="$2"
 
@@ -47,16 +54,30 @@ script_is_invoked_by_workflows() {
     return 1
   fi
 
-  local base
+  local base rel
   base="$(basename "$script_path")"
+  # Repo-relative path, if the script lives under a scripts/ tree; falls back to
+  # the basename otherwise. Either form is an acceptable invocation reference.
+  rel="${script_path#*/scripts/}"
+  if [ "$rel" != "$script_path" ]; then
+    rel="scripts/$rel"
+  else
+    rel="$base"
+  fi
+
+  # Escape ERE metacharacters so the path/basename match literally (notably the
+  # '.' in ".sh"). Boundaries: left = start-of-line | whitespace | quote | / | =;
+  # right = end-of-line | whitespace | quote | ) | ; | :.
+  local base_re rel_re lbound rbound pattern
+  base_re="$(printf '%s' "$base" | sed -e 's/[.[\*^$()+?{|\\]/\\&/g' -e 's/]/\\]/g')"
+  rel_re="$(printf '%s' "$rel" | sed -e 's/[.[\*^$()+?{|\\]/\\&/g' -e 's#/#\\/#g' -e 's/]/\\]/g')"
+  lbound='(^|[[:space:]"'\''/=])'
+  rbound='([[:space:]"'\'');:]|$)'
+  pattern="${lbound}(${rel_re}|${base_re})${rbound}"
 
   local wf found=1
   while IFS= read -r -d '' wf; do
-    # Match the basename as a whole token (preceded by a path separator, space,
-    # quote, or start-of-token boundary). grep -F-style literal matching is done
-    # via a fixed-string search on the basename, which is sufficient because a
-    # script basename is distinctive.
-    if grep -Fq -- "$base" "$wf"; then
+    if grep -Eq -- "$pattern" "$wf"; then
       found=0
       break
     fi
@@ -114,6 +135,15 @@ set -euo pipefail
 echo "publishing release"
 EOF
 
+# A deploy script used to test boundary-anchored matching: a workflow that
+# only references "predeploy.sh" must NOT count as invoking "deploy.sh".
+mkdir -p "$FIXTURE_DIR/scripts/deploy"
+cat > "$FIXTURE_DIR/scripts/deploy/deploy.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+echo "deploying"
+EOF
+
 # A workflows dir where one workflow DOES reference the script.
 mkdir -p "$FIXTURE_DIR/wf_invoked"
 cat > "$FIXTURE_DIR/wf_invoked/release.yml" <<'EOF'
@@ -137,6 +167,53 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo testing
+EOF
+
+# A workflows dir whose only "deploy"-ish reference is to predeploy.sh. A query
+# for deploy.sh must NOT match here (predeploy.sh is a longer filename, not a
+# whole-token reference to deploy.sh).
+mkdir -p "$FIXTURE_DIR/wf_predeploy"
+cat > "$FIXTURE_DIR/wf_predeploy/predeploy.yml" <<'EOF'
+name: Predeploy
+on:
+  workflow_dispatch:
+jobs:
+  predeploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Predeploy
+        run: bash scripts/deploy/predeploy.sh
+EOF
+
+# A workflows dir that references deploy.sh via its full relative path.
+mkdir -p "$FIXTURE_DIR/wf_deploy_path"
+cat > "$FIXTURE_DIR/wf_deploy_path/deploy.yml" <<'EOF'
+name: Deploy
+on:
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy
+        run: bash scripts/deploy/deploy.sh --env prod
+EOF
+
+# A workflows dir that references deploy.sh by quoted basename only.
+mkdir -p "$FIXTURE_DIR/wf_deploy_quoted"
+cat > "$FIXTURE_DIR/wf_deploy_quoted/deploy.yml" <<'EOF'
+name: Deploy
+on:
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy
+        run: ./run.sh "deploy.sh"
 EOF
 
 # A workflows dir where NO workflow references the script.
@@ -168,6 +245,15 @@ assert_not_invoked "fixture: no workflow references publish.sh" \
   "$FIXTURE_DIR/scripts/release/publish.sh" "$FIXTURE_DIR/wf_missing"
 assert_not_invoked "fixture: workflows dir absent" \
   "$FIXTURE_DIR/scripts/release/publish.sh" "$FIXTURE_DIR/does_not_exist"
+
+# Boundary-anchored matching: predeploy.sh must NOT satisfy a query for deploy.sh.
+assert_not_invoked "fixture: predeploy.sh does not invoke deploy.sh (substring)" \
+  "$FIXTURE_DIR/scripts/deploy/deploy.sh" "$FIXTURE_DIR/wf_predeploy"
+# Positive forms for deploy.sh.
+assert_invoked     "fixture: workflow references deploy.sh by full path" \
+  "$FIXTURE_DIR/scripts/deploy/deploy.sh" "$FIXTURE_DIR/wf_deploy_path"
+assert_invoked     "fixture: workflow references \"deploy.sh\" quoted basename" \
+  "$FIXTURE_DIR/scripts/deploy/deploy.sh" "$FIXTURE_DIR/wf_deploy_quoted"
 
 # --- Real repo check ---------------------------------------------------------
 # Collect real release/deploy scripts (*.sh only; *.schema.json are data files
