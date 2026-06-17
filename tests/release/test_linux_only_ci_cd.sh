@@ -112,6 +112,23 @@ content_has_windows_shell_syntax() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+# This guard's own source legitimately embeds every Windows-shell token it
+# hunts for: the regex pattern definitions (powershell, Get-/Write-, %VAR%,
+# $env:, cmd /c, .ps1) AND the self-test fixture literals. A Linux-only guard
+# necessarily contains the Windows-isms it detects, so scanning its own
+# definitions/fixtures in the real-repo content scan would be a guaranteed
+# false positive. We resolve our own repo-relative path and skip ONLY this
+# file in that scan. Detectors and the scan of all OTHER tracked CI/CD files
+# are unchanged. (See the scan loop below.)
+#
+# Resolve our own repo-relative path with git itself (--full-name) so it matches
+# the form `git ls-files` emits regardless of OS/path style (e.g. Git Bash maps
+# `D:/...` to `/d/...`, which breaks naive prefix stripping on Windows).
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SELF_BASE="$(basename "${BASH_SOURCE[0]}")"
+SELF_REL="$(git -C "$SELF_DIR" ls-files --full-name -- "$SELF_BASE" 2>/dev/null)"
+
 CICD_DIRS=(
   "$REPO_ROOT/.github"
   "$REPO_ROOT/scripts/release"
@@ -281,6 +298,12 @@ fi
 scanned=0
 violations=0
 while IFS= read -r -d '' rel; do
+  # Skip the running guard's own source: it deliberately defines and embeds the
+  # Windows tokens it searches for, so scanning it would be a false positive.
+  # Every OTHER tracked CI/CD file is still scanned exactly as before.
+  if [ "$rel" = "$SELF_REL" ]; then
+    continue
+  fi
   # Only inspect text formats relevant to the CI/CD surface.
   case "$rel" in
     *.sh|*.yml|*.yaml|*.bash) ;;
