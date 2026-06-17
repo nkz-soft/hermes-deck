@@ -16,6 +16,7 @@
     "Change": {
       "type": "object",
       "properties": {
+        "entityType": { "const": "Change" },
         "id": { "type": "string" },
         "branch": { "type": "string" },
         "author": { "type": "string" },
@@ -25,11 +26,12 @@
         "releaseCandidateId": { "type": "string" }
       },
       "additionalProperties": false,
-      "required": ["id"]
+      "required": ["entityType", "id"]
     },
     "ValidationGate": {
       "type": "object",
       "properties": {
+        "entityType": { "const": "ValidationGate" },
         "id": { "type": "string" },
         "changeId": { "type": "string" },
         "state": {
@@ -43,11 +45,12 @@
         "completedAt": { "type": "string" }
       },
       "additionalProperties": false,
-      "required": ["id", "state"]
+      "required": ["entityType", "id", "state"]
     },
     "ReleaseCandidate": {
       "type": "object",
       "properties": {
+        "entityType": { "const": "ReleaseCandidate" },
         "id": { "type": "string" },
         "version": { "type": "string" },
         "sourceRevision": { "type": "string" },
@@ -60,11 +63,12 @@
         }
       },
       "additionalProperties": false,
-      "required": ["id", "state"]
+      "required": ["entityType", "id", "state"]
     },
     "DeploymentApproval": {
       "type": "object",
       "properties": {
+        "entityType": { "const": "DeploymentApproval" },
         "id": { "type": "string" },
         "actionType": {
           "type": "string",
@@ -85,11 +89,12 @@
         "decidedAt": { "type": "string" }
       },
       "additionalProperties": false,
-      "required": ["id", "actionType", "state"]
+      "required": ["entityType", "id", "actionType", "state"]
     },
     "ReleaseRecord": {
       "type": "object",
       "properties": {
+        "entityType": { "const": "ReleaseRecord" },
         "id": { "type": "string" },
         "version": { "type": "string" },
         "sourceRevision": { "type": "string" },
@@ -117,11 +122,12 @@
         "completedAt": { "type": "string" }
       },
       "additionalProperties": false,
-      "required": ["id", "state"]
+      "required": ["entityType", "id", "state"]
     },
     "RollbackRequest": {
       "type": "object",
       "properties": {
+        "entityType": { "const": "RollbackRequest" },
         "id": { "type": "string" },
         "failedReleaseRecordId": { "type": "string" },
         "targetVersion": { "type": "string" },
@@ -135,11 +141,12 @@
         "outcome": { "type": "string" }
       },
       "additionalProperties": false,
-      "required": ["id", "state"]
+      "required": ["entityType", "id", "state"]
     },
     "ReleaseNotes": {
       "type": "object",
       "properties": {
+        "entityType": { "const": "ReleaseNotes" },
         "id": { "type": "string" },
         "version": { "type": "string" },
         "changes": { "type": "array", "items": { "type": "string" } },
@@ -154,7 +161,7 @@
         "publishedAt": { "type": "string" }
       },
       "additionalProperties": false,
-      "required": ["id", "reviewState"]
+      "required": ["entityType", "id", "reviewState"]
     }
   }
 }

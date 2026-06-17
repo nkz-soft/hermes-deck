@@ -133,6 +133,7 @@ check_valid_schema_document "release-record: schema"    "$RECORD_SCHEMA"
 
 # Valid ReleaseRecord-shaped instance under $defs.
 RECORD_VALID='{
+  "entityType": "ReleaseRecord",
   "id": "rec-001",
   "version": "1.4.0",
   "sourceRevision": "abc123",
@@ -145,14 +146,29 @@ RECORD_VALID='{
   "createdAt": "2026-06-17T10:00:00Z",
   "completedAt": "2026-06-17T10:30:00Z"
 }'
+# Minimal ReleaseRecord: with the entityType discriminator a bare id+state
+# instance is unambiguous even when its state value (failed) also appears in
+# the ValidationGate and RollbackRequest enums.
+RECORD_MINIMAL='{
+  "entityType": "ReleaseRecord",
+  "id": "rec-min",
+  "state": "failed"
+}'
 # Invalid: bad enum value for state.
 RECORD_INVALID='{
+  "entityType": "ReleaseRecord",
   "id": "rec-002",
   "state": "exploded"
 }'
+# Invalid: bare object with no discriminator must not be accepted as any entity.
+RECORD_BARE='{
+  "id": "rec-003"
+}'
 
 check_accepts "release-record: ReleaseRecord sample" "$RECORD_SCHEMA" "$RECORD_VALID"
+check_accepts "release-record: minimal ReleaseRecord" "$RECORD_SCHEMA" "$RECORD_MINIMAL"
 check_rejects "release-record: bad state enum"        "$RECORD_SCHEMA" "$RECORD_INVALID"
+check_rejects "release-record: bare object no discriminator" "$RECORD_SCHEMA" "$RECORD_BARE"
 
 # --- Schema 2: release-event.schema.json (T009) ------------------------------
 
