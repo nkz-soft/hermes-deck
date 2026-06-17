@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hermes-deck/scripts/release/release-record.schema.json",
+  "title": "Release Record Entities",
+  "description": "Release lifecycle entities from data-model.md. The root accepts any one of the defined entity shapes.",
+  "oneOf": [
+    { "$ref": "#/$defs/Change" },
+    { "$ref": "#/$defs/ValidationGate" },
+    { "$ref": "#/$defs/ReleaseCandidate" },
+    { "$ref": "#/$defs/DeploymentApproval" },
+    { "$ref": "#/$defs/ReleaseRecord" },
+    { "$ref": "#/$defs/RollbackRequest" },
+    { "$ref": "#/$defs/ReleaseNotes" }
+  ],
+  "$defs": {
+    "Change": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "branch": { "type": "string" },
+        "author": { "type": "string" },
+        "submittedAt": { "type": "string" },
+        "sourceRevision": { "type": "string" },
+        "validationGateId": { "type": "string" },
+        "releaseCandidateId": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "required": ["id"]
+    },
+    "ValidationGate": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "changeId": { "type": "string" },
+        "state": {
+          "type": "string",
+          "enum": ["running", "passed", "failed", "skipped", "inconclusive"]
+        },
+        "requiredChecks": { "type": "array", "items": { "type": "string" } },
+        "completedChecks": { "type": "array", "items": { "type": "string" } },
+        "failureReason": { "type": "string" },
+        "startedAt": { "type": "string" },
+        "completedAt": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "required": ["id", "state"]
+    },
+    "ReleaseCandidate": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "version": { "type": "string" },
+        "sourceRevision": { "type": "string" },
+        "validationGateId": { "type": "string" },
+        "artifactSet": { "type": "array", "items": { "type": "string" } },
+        "notesDraftId": { "type": "string" },
+        "state": {
+          "type": "string",
+          "enum": ["created", "pending-approval", "approved", "superseded", "rejected"]
+        }
+      },
+      "additionalProperties": false,
+      "required": ["id", "state"]
+    },
+    "DeploymentApproval": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "actionType": {
+          "type": "string",
+          "enum": ["deploy", "rollback"]
+        },
+        "releaseCandidateId": { "type": "string" },
+        "targetVersion": { "type": "string" },
+        "environmentId": { "type": "string" },
+        "requestedBy": { "type": "string" },
+        "decidedBy": { "type": "string" },
+        "state": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected", "expired", "mismatched"]
+        },
+        "impactSummary": { "type": "string" },
+        "recoveryPlan": { "type": "string" },
+        "requestedAt": { "type": "string" },
+        "decidedAt": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "required": ["id", "actionType", "state"]
+    },
+    "ReleaseRecord": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "version": { "type": "string" },
+        "sourceRevision": { "type": "string" },
+        "environmentId": { "type": "string" },
+        "validationGateId": { "type": "string" },
+        "approvalId": { "type": "string" },
+        "state": {
+          "type": "string",
+          "enum": [
+            "unreleased",
+            "validating",
+            "release-candidate",
+            "pending-approval",
+            "deploying",
+            "deployed",
+            "failed",
+            "superseded",
+            "rolled-back"
+          ]
+        },
+        "events": { "type": "array" },
+        "failureReason": { "type": "string" },
+        "releaseNotesId": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "completedAt": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "required": ["id", "state"]
+    },
+    "RollbackRequest": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "failedReleaseRecordId": { "type": "string" },
+        "targetVersion": { "type": "string" },
+        "environmentId": { "type": "string" },
+        "reason": { "type": "string" },
+        "approvalId": { "type": "string" },
+        "state": {
+          "type": "string",
+          "enum": ["requested", "pending-approval", "rolling-back", "completed", "failed", "rejected"]
+        },
+        "outcome": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "required": ["id", "state"]
+    },
+    "ReleaseNotes": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "version": { "type": "string" },
+        "changes": { "type": "array", "items": { "type": "string" } },
+        "fixes": { "type": "array", "items": { "type": "string" } },
+        "knownIssues": { "type": "array", "items": { "type": "string" } },
+        "operationalCaveats": { "type": "array", "items": { "type": "string" } },
+        "migrationNotes": { "type": "string" },
+        "reviewState": {
+          "type": "string",
+          "enum": ["draft", "ready", "published"]
+        },
+        "publishedAt": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "required": ["id", "reviewState"]
+    }
+  }
+}

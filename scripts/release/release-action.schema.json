@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hermes-deck/scripts/release/release-action.schema.json",
+  "title": "Release Action Records",
+  "description": "The four release action record types from contracts/release-actions.md.",
+  "oneOf": [
+    { "$ref": "#/$defs/RequestDeploymentApproval" },
+    { "$ref": "#/$defs/DecideDeploymentApproval" },
+    { "$ref": "#/$defs/RequestRollbackApproval" },
+    { "$ref": "#/$defs/StartApprovedAction" }
+  ],
+  "$defs": {
+    "RequestDeploymentApproval": {
+      "type": "object",
+      "properties": {
+        "recordType": { "const": "release.deployment.request_approval" },
+        "releaseCandidateId": { "type": "string" },
+        "version": { "type": "string" },
+        "environment": { "type": "string" },
+        "validationGateId": { "type": "string" },
+        "impactSummary": { "type": "string" },
+        "recoveryPlan": { "type": "string" },
+        "requestedBy": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "required": [
+        "recordType",
+        "releaseCandidateId",
+        "version",
+        "environment",
+        "validationGateId",
+        "impactSummary",
+        "recoveryPlan",
+        "requestedBy"
+      ]
+    },
+    "DecideDeploymentApproval": {
+      "type": "object",
+      "properties": {
+        "recordType": { "const": "release.deployment.decide" },
+        "approvalId": { "type": "string" },
+        "decision": {
+          "type": "string",
+          "enum": ["approve", "reject"]
+        },
+        "decidedBy": { "type": "string" },
+        "decisionReason": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "required": ["recordType", "approvalId", "decision", "decidedBy"]
+    },
+    "RequestRollbackApproval": {
+      "type": "object",
+      "properties": {
+        "recordType": { "const": "release.rollback.request_approval" },
+        "failedReleaseRecordId": { "type": "string" },
+        "targetVersion": { "type": "string" },
+        "environment": { "type": "string" },
+        "reason": { "type": "string" },
+        "recoveryPlan": { "type": "string" },
+        "requestedBy": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "required": [
+        "recordType",
+        "failedReleaseRecordId",
+        "targetVersion",
+        "environment",
+        "reason",
+        "recoveryPlan",
+        "requestedBy"
+      ]
+    },
+    "StartApprovedAction": {
+      "type": "object",
+      "properties": {
+        "recordType": { "const": "release.action.start_approved" },
+        "approvalId": { "type": "string" },
+        "actionType": {
+          "type": "string",
+          "enum": ["deploy", "rollback"]
+        },
+        "version": { "type": "string" },
+        "environment": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "required": ["recordType", "approvalId", "actionType", "version", "environment"]
+    }
+  }
+}
