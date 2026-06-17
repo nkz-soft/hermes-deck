@@ -85,7 +85,10 @@ PY
 _uses_latest_tag() {
   local file="$1"
   # Match `image: name:latest` (optionally quoted), case-insensitive on latest.
-  grep -Eiq 'image:[[:space:]]*["'\'']?[^[:space:]"'\'']+:latest["'\'']?[[:space:]]*$' "$file"
+  # Allow an optional trailing comment (e.g. `image: foo:latest # pin later`)
+  # so a commented `:latest` is still flagged. A non-comment, non-space
+  # character after `latest` (e.g. `:latest-alpine`) prevents a match.
+  grep -Eiq 'image:[[:space:]]*["'\'']?[^[:space:]"'\'']+:latest["'\'']?[[:space:]]*(#.*)?$' "$file"
 }
 
 # _contains_plaintext_secret <file>
@@ -101,7 +104,7 @@ _contains_plaintext_secret() {
     'AKIA[0-9A-Z]{16}'
     '-----BEGIN .*PRIVATE KEY-----'
     'gh[pousr]_[A-Za-z0-9]{20,}'
-    '://[^:@/[:space:]]+:[^@/[:space:]]+@'
+    '://[^:@/[:space:]]+:[^@/$\{[:space:]][^@/[:space:]]*@'
   )
   local p
   for p in "${patterns[@]}"; do
@@ -245,6 +248,23 @@ volumes:
   data: {}
 EOF
 
+# BAD fixture: :latest tag followed by a trailing comment (must still be flagged).
+cat > "$FIXTURE_DIR/bad_latest_comment.yml" <<'EOF'
+services:
+  api:
+    image: ghcr.io/hermes-deck/api:latest # pin later
+EOF
+
+# GOOD fixture: an interpolated connection-string URL (${VAR}) is NOT a plaintext
+# secret. Valid YAML, services mapping, pinned image tag.
+cat > "$FIXTURE_DIR/good_interpolated_url.yml" <<'EOF'
+services:
+  api:
+    image: ghcr.io/hermes-deck/api:1.4.0
+    environment:
+      DATABASE_URL: postgres://hermes:${POSTGRES_PASSWORD}@db:5432/hermes
+EOF
+
 # --- Self-tests --------------------------------------------------------------
 
 assert_accepted "fixture: GOOD compose (pinned tags, no secrets)" "$FIXTURE_DIR/good.yml"
@@ -252,6 +272,8 @@ assert_rejected "fixture: BAD compose (:latest tag)"              "$FIXTURE_DIR/
 assert_rejected "fixture: BAD compose (invalid YAML)"             "$FIXTURE_DIR/bad_yaml.yml"
 assert_rejected "fixture: BAD compose (plaintext secret)"         "$FIXTURE_DIR/bad_secret.yml"
 assert_rejected "fixture: BAD compose (no services mapping)"      "$FIXTURE_DIR/bad_no_services.yml"
+assert_rejected "fixture: BAD compose (:latest + trailing comment)" "$FIXTURE_DIR/bad_latest_comment.yml"
+assert_accepted "fixture: GOOD compose (interpolated URL creds)"  "$FIXTURE_DIR/good_interpolated_url.yml"
 
 # --- Policy doc checks -------------------------------------------------------
 
