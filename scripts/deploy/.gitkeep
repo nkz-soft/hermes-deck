@@ -1,0 +1,2 @@
+# Aspire Docker deployment generation helper scripts.
+# Linux-compatible shell scripts are invoked by GitHub Actions; added in later phases.

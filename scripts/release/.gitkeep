@@ -1,0 +1,2 @@
+# Release helper scripts: validation, release-record, rollback, and release-note helpers.
+# Linux-compatible shell scripts are invoked by GitHub Actions; added in later phases.

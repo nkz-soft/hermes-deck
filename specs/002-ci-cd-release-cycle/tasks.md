@@ -18,13 +18,13 @@
 
 **Purpose**: Establish repository locations and shared conventions for Linux GitHub Actions CI/CD, Aspire Docker deployment generation, and release artifacts.
 
-- [ ] T001 Create `.github/workflows/` directory for repository automation workflows
-- [ ] T002 Create `scripts/release/` directory for release validation, release-record, rollback, and release-note helper scripts
-- [ ] T003 Create `scripts/deploy/` directory for Aspire Docker deployment generation helper scripts
-- [ ] T004 Create `docs/release/` directory for release cycle operator documentation and templates
-- [ ] T005 Create `deploy/aspire/compose/` directory target for generated Aspire Docker deployment files
-- [ ] T006 [P] Create `tests/release/` directory for CI/CD and release procedure tests
-- [ ] T007 [P] Create `.github/release.yml` with release note category metadata for repository releases
+- [X] T001 Create `.github/workflows/` directory for repository automation workflows
+- [X] T002 Create `scripts/release/` directory for release validation, release-record, rollback, and release-note helper scripts
+- [X] T003 Create `scripts/deploy/` directory for Aspire Docker deployment generation helper scripts
+- [X] T004 Create `docs/release/` directory for release cycle operator documentation and templates
+- [X] T005 Create `deploy/aspire/compose/` directory target for generated Aspire Docker deployment files
+- [X] T006 [P] Create `tests/release/` directory for CI/CD and release procedure tests
+- [X] T007 [P] Create `.github/release.yml` with release note category metadata for repository releases
 
 ---
 
