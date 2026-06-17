@@ -1,0 +1,3 @@
+# Target directory for generated Aspire Docker deployment files.
+# Generated artifacts are produced by GitHub Actions from the AppHost topology and are
+# git-ignored in a later phase; this directory is tracked so the generation target exists.

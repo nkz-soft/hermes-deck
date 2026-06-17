@@ -1,0 +1,40 @@
+# GitHub automatically generated release notes configuration.
+# Categories align with the release notes contract sections in
+# specs/002-ci-cd-release-cycle/contracts/release-notes.md so generated repository
+# release notes map onto the reviewed release-notes artifact.
+# Reference: https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+      - duplicate
+      - invalid
+      - wontfix
+    authors:
+      - dependabot
+      - github-actions
+  categories:
+    - title: Changed Capabilities
+      labels:
+        - feature
+        - enhancement
+        - capability
+    - title: Fixes
+      labels:
+        - bug
+        - fix
+    - title: Operational Caveats
+      labels:
+        - ops
+        - operational
+        - deployment
+    - title: Migration Notes
+      labels:
+        - migration
+        - breaking-change
+    - title: Known Issues
+      labels:
+        - known-issue
+    - title: Other Changes
+      labels:
+        - "*"
