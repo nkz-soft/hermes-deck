@@ -22,22 +22,6 @@ set -euo pipefail
 # Runs unchanged on Linux GitHub Actions ubuntu-latest. Requires: bash, grep.
 # NO PowerShell, .cmd, or Windows-only syntax.
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-RELEASE_NOTES_TEMPLATE="$REPO_ROOT/docs/release/release-notes-template.md"
-
-PASS_COUNT=0
-FAIL_COUNT=0
-
-pass() {
-  echo "PASS: $1"
-  PASS_COUNT=$((PASS_COUNT + 1))
-}
-
-fail() {
-  echo "FAIL: $1"
-  FAIL_COUNT=$((FAIL_COUNT + 1))
-}
-
 # --- Detection ---------------------------------------------------------------
 
 # Secret / sensitive content patterns (extended regex). Case-insensitivity is
@@ -70,7 +54,10 @@ contains_secrets() {
   if [ "$src" = "-" ]; then
     input="$(cat)"
   else
-    if [ ! -f "$src" ]; then
+    # Accept regular files as well as readable special files such as the
+    # /dev/fd/* paths produced by process substitution (e.g.
+    # contains_secrets <(printf ...)), which callers commonly use.
+    if [ ! -r "$src" ]; then
       echo "contains_secrets: no such file: $src" >&2
       return 2
     fi
@@ -86,6 +73,28 @@ contains_secrets() {
     fi
   done
   return "$found"
+}
+
+# --- Self-test harness -------------------------------------------------------
+# Everything below runs ONLY when this file is executed directly. When the file
+# is sourced by another release script, only SECRET_PATTERNS and
+# contains_secrets are defined, with no side effects.
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+RELEASE_NOTES_TEMPLATE="$REPO_ROOT/docs/release/release-notes-template.md"
+
+PASS_COUNT=0
+FAIL_COUNT=0
+
+pass() {
+  echo "PASS: $1"
+  PASS_COUNT=$((PASS_COUNT + 1))
+}
+
+fail() {
+  echo "FAIL: $1"
+  FAIL_COUNT=$((FAIL_COUNT + 1))
 }
 
 # assert_flagged <label> <file>
@@ -216,3 +225,5 @@ if [ "$FAIL_COUNT" -ne 0 ]; then
 fi
 echo "All redaction checks passed."
 exit 0
+
+fi
