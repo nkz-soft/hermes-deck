@@ -93,3 +93,41 @@ Expected result: release status can be understood without reading raw automation
 5. Track rollback through completed or failed state.
 
 Expected result: rollback is blocked until approved, restores the selected healthy version, and records the decision and outcome in release history.
+
+## Run Release Validation Harnesses
+
+The release-cycle CI/CD validation harnesses live under `tests/release/`. Run
+all of them locally from the repository root:
+
+```bash
+for t in tests/release/*.sh; do bash "$t"; done
+```
+
+Run a single harness:
+
+```bash
+bash tests/release/test_release_schemas.sh
+```
+
+Expected result: each harness exits `0` on pass and non-zero on fail. During
+early phases some harnesses pass with a notice for artifacts that do not exist
+yet (release scripts, workflows, generated Aspire Docker Compose files). See
+[docs/release/testing.md](../../docs/release/testing.md) for the full list of
+harnesses, prerequisites, and pass conventions.
+
+## GitHub Actions Release Workflow Usage
+
+Release creation and every release script execute through Linux GitHub Actions.
+Two workflows drive the release cycle:
+
+- `.github/workflows/ci.yml` runs the validation gate and the release
+  validation harnesses under `tests/release/` on every change.
+- `.github/workflows/release.yml` handles manual-dispatch release candidate
+  creation, Aspire Docker deployment generation, approval-gated deployment, and
+  rollback.
+
+These workflow files are added in later phases (US1/US2); the high-level usage
+is described here so the quickstart reflects the intended flow. Running release
+scripts locally is for troubleshooting only and does not produce approved
+release evidence — approved release evidence is generated exclusively by the
+GitHub Actions workflows and attached to the workflow run or release record.

@@ -34,19 +34,19 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T008 Create release record schema in `scripts/release/release-record.schema.json` covering Change, ValidationGate, ReleaseCandidate, DeploymentApproval, ReleaseRecord, RollbackRequest, and ReleaseNotes fields from `specs/002-ci-cd-release-cycle/data-model.md`
-- [ ] T009 Create release event schema in `scripts/release/release-event.schema.json` from `specs/002-ci-cd-release-cycle/contracts/release-events.md`
-- [ ] T010 Create release action record schema in `scripts/release/release-action.schema.json` from `specs/002-ci-cd-release-cycle/contracts/release-actions.md`
-- [ ] T011 Create release notes template in `docs/release/release-notes-template.md` from `specs/002-ci-cd-release-cycle/contracts/release-notes.md`
-- [ ] T012 Define Aspire Docker deployment artifact policy and GitHub Actions-only execution rule in `docs/release/aspire-docker-deployment.md`
-- [ ] T013 [P] Create workflow syntax validation test harness in `tests/release/test_workflow_syntax.sh`
-- [ ] T014 [P] Create release schema validation test harness in `tests/release/test_release_schemas.sh`
-- [ ] T015 [P] Create secret redaction test harness in `tests/release/test_redaction.sh`
-- [ ] T016 [P] Create Aspire deployment artifact validation harness in `tests/release/test_aspire_docker_artifacts.sh`
-- [ ] T017 [P] Create GitHub Actions script invocation validation harness in `tests/release/test_github_actions_script_invocation.sh`
-- [ ] T018 [P] Create Linux-only CI/CD guard test rejecting `.ps1`, `.cmd`, and Windows shell syntax in `tests/release/test_linux_only_ci_cd.sh`
-- [ ] T019 Add release test execution instructions to `docs/release/testing.md`
-- [ ] T020 Add release test commands and GitHub Actions release workflow usage to `specs/002-ci-cd-release-cycle/quickstart.md`
+- [x] T008 Create release record schema in `scripts/release/release-record.schema.json` covering Change, ValidationGate, ReleaseCandidate, DeploymentApproval, ReleaseRecord, RollbackRequest, and ReleaseNotes fields from `specs/002-ci-cd-release-cycle/data-model.md`
+- [x] T009 Create release event schema in `scripts/release/release-event.schema.json` from `specs/002-ci-cd-release-cycle/contracts/release-events.md`
+- [x] T010 Create release action record schema in `scripts/release/release-action.schema.json` from `specs/002-ci-cd-release-cycle/contracts/release-actions.md`
+- [x] T011 Create release notes template in `docs/release/release-notes-template.md` from `specs/002-ci-cd-release-cycle/contracts/release-notes.md`
+- [x] T012 Define Aspire Docker deployment artifact policy and GitHub Actions-only execution rule in `docs/release/aspire-docker-deployment.md`
+- [x] T013 [P] Create workflow syntax validation test harness in `tests/release/test_workflow_syntax.sh`
+- [x] T014 [P] Create release schema validation test harness in `tests/release/test_release_schemas.sh`
+- [x] T015 [P] Create secret redaction test harness in `tests/release/test_redaction.sh`
+- [x] T016 [P] Create Aspire deployment artifact validation harness in `tests/release/test_aspire_docker_artifacts.sh`
+- [x] T017 [P] Create GitHub Actions script invocation validation harness in `tests/release/test_github_actions_script_invocation.sh`
+- [x] T018 [P] Create Linux-only CI/CD guard test rejecting `.ps1`, `.cmd`, and Windows shell syntax in `tests/release/test_linux_only_ci_cd.sh`
+- [x] T019 Add release test execution instructions to `docs/release/testing.md`
+- [x] T020 Add release test commands and GitHub Actions release workflow usage to `specs/002-ci-cd-release-cycle/quickstart.md`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin.
 

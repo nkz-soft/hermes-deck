@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hermes-deck/scripts/release/release-event.schema.json",
+  "title": "Release Event Envelope",
+  "description": "Release event envelope from contracts/release-events.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "eventId": { "type": "string" },
+    "eventType": {
+      "type": "string",
+      "enum": [
+        "validation.started",
+        "validation.passed",
+        "validation.failed",
+        "release_candidate.created",
+        "deployment.approval_requested",
+        "deployment.approved",
+        "deployment.rejected",
+        "deployment.started",
+        "deployment.completed",
+        "deployment.failed",
+        "rollback.approval_requested",
+        "rollback.approved",
+        "rollback.rejected",
+        "rollback.started",
+        "rollback.completed",
+        "rollback.failed",
+        "release_notes.published"
+      ]
+    },
+    "occurredAt": { "type": "string" },
+    "releaseRecordId": { "type": "string" },
+    "version": { "type": "string" },
+    "environment": { "type": "string" },
+    "actor": { "type": "string" },
+    "status": { "type": "string" },
+    "message": { "type": "string" },
+    "links": {
+      "type": ["array", "object"]
+    }
+  },
+  "required": [
+    "eventId",
+    "eventType",
+    "occurredAt",
+    "releaseRecordId",
+    "version",
+    "environment",
+    "status",
+    "message"
+  ]
+}
