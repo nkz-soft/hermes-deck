@@ -236,6 +236,7 @@ data/raw/**
 data/processed/**
 data/fixtures/generated/**
 runs/
+!src/HermesDeck.Api/Runs/
 reports/*.md
 reports/**
 artifacts/

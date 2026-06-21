@@ -4,6 +4,7 @@ using HermesDeck.Api.Conversations;
 using HermesDeck.Api.Events;
 using HermesDeck.Api.Infrastructure;
 using HermesDeck.Api.Persistence;
+using HermesDeck.Api.Runs;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -41,6 +42,8 @@ builder.Services.AddScoped<IHermesAuthorizationService, HermesAuthorizationServi
 builder.Services.AddScoped<ICurrentIdentityAccessor, CurrentIdentityAccessor>();
 builder.Services.AddScoped<IConversationService, ConversationService>();
 builder.Services.AddSingleton<IRunEventPublisher, RunEventPublisher>();
+builder.Services.AddScoped<IRunOrchestrator, RunOrchestrator>();
+builder.Services.AddScoped<IAgentChatRunner, NullAgentChatRunner>();
 
 var app = builder.Build();
 
@@ -51,6 +54,8 @@ app.MapGet("/health", () => Results.Ok("ok"));
 
 app.MapAuthEndpoints();
 app.MapConversationEndpoints();
+app.MapMessageEndpoints();
+app.MapRunEndpoints();
 app.MapEventStreamEndpoint();
 
 app.Run();
