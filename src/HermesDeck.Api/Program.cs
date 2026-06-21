@@ -1,5 +1,6 @@
 using HermesDeck.Api.Auth;
 using HermesDeck.Api.Configuration;
+using HermesDeck.Api.Conversations;
 using HermesDeck.Api.Infrastructure;
 using HermesDeck.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -34,6 +35,7 @@ builder.Services.AddScoped<IHermesIdentityMapper, HermesIdentityMapper>();
 builder.Services.AddScoped<ISessionTokenService, SessionTokenService>();
 builder.Services.AddScoped<IHermesAuthorizationService, HermesAuthorizationService>();
 builder.Services.AddScoped<ICurrentIdentityAccessor, CurrentIdentityAccessor>();
+builder.Services.AddScoped<IConversationService, ConversationService>();
 
 var app = builder.Build();
 
@@ -43,6 +45,7 @@ app.UseMiddleware<SessionAuthenticationMiddleware>();
 app.MapGet("/health", () => Results.Ok("ok"));
 
 app.MapAuthEndpoints();
+app.MapConversationEndpoints();
 
 app.Run();
 
