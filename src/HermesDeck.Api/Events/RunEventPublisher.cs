@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 
@@ -12,23 +11,46 @@ namespace HermesDeck.Api.Events;
 /// conversation. Subscriptions clean themselves up when the caller's cancellation token fires.
 /// Registered as a singleton so all requests share one fan-out hub.
 /// </summary>
+/// <remarks>
+/// Subscriber registration, removal, and bucket lifecycle are all guarded by a single lock so that
+/// adding a subscriber can never race with another subscriber's empty-bucket removal (which would
+/// otherwise silently orphan the newcomer). Publishing snapshots the subscriber list under the lock
+/// and then writes outside it, so a slow reader never holds the lock while events fan out.
+/// </remarks>
 public sealed class RunEventPublisher : IRunEventPublisher
 {
-    // conversationId -> set of subscriber channels. ConcurrentDictionary used as a thread-safe set.
-    private readonly ConcurrentDictionary<string, ConcurrentDictionary<Subscriber, byte>> _subscribers = new();
+    /// <summary>
+    /// Per-subscriber channel capacity. <see cref="BoundedChannelFullMode.DropOldest"/> means a
+    /// subscriber that falls behind silently loses its oldest events; SSE clients are expected to
+    /// reconnect and dedupe by event id, per the events contract.
+    /// </summary>
+    private const int SubscriberChannelCapacity = 256;
+
+    private readonly object _gate = new();
+
+    // conversationId -> live subscriber channels for that conversation.
+    private readonly Dictionary<string, List<Subscriber>> _subscribers = new();
 
     public Task PublishAsync(RunEvent runEvent, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(runEvent);
 
-        if (_subscribers.TryGetValue(runEvent.ConversationId, out var conversationSubscribers))
+        Subscriber[] targets;
+        lock (_gate)
         {
-            foreach (var subscriber in conversationSubscribers.Keys)
+            if (!_subscribers.TryGetValue(runEvent.ConversationId, out var conversationSubscribers))
             {
-                // Drop the event for a subscriber whose channel is full or completed rather than
-                // blocking the publisher; SSE clients are expected to dedupe/reconnect.
-                subscriber.Channel.Writer.TryWrite(runEvent);
+                return Task.CompletedTask;
             }
+
+            targets = conversationSubscribers.ToArray();
+        }
+
+        foreach (var subscriber in targets)
+        {
+            // Drop the event for a subscriber whose channel is full or completed rather than
+            // blocking the publisher; SSE clients are expected to dedupe/reconnect.
+            subscriber.Channel.Writer.TryWrite(runEvent);
         }
 
         return Task.CompletedTask;
@@ -41,10 +63,16 @@ public sealed class RunEventPublisher : IRunEventPublisher
         ArgumentException.ThrowIfNullOrEmpty(conversationId);
 
         var subscriber = new Subscriber();
-        var conversationSubscribers = _subscribers.GetOrAdd(
-            conversationId,
-            _ => new ConcurrentDictionary<Subscriber, byte>());
-        conversationSubscribers.TryAdd(subscriber, 0);
+        lock (_gate)
+        {
+            if (!_subscribers.TryGetValue(conversationId, out var conversationSubscribers))
+            {
+                conversationSubscribers = [];
+                _subscribers[conversationId] = conversationSubscribers;
+            }
+
+            conversationSubscribers.Add(subscriber);
+        }
 
         try
         {
@@ -55,16 +83,18 @@ public sealed class RunEventPublisher : IRunEventPublisher
         }
         finally
         {
-            conversationSubscribers.TryRemove(subscriber, out _);
             subscriber.Channel.Writer.TryComplete();
 
-            // Remove the conversation bucket if it has no remaining subscribers, avoiding unbounded
-            // growth of empty buckets. Re-check after removal to avoid racing a concurrent add.
-            if (conversationSubscribers.IsEmpty)
+            lock (_gate)
             {
-                _subscribers.TryRemove(
-                    new KeyValuePair<string, ConcurrentDictionary<Subscriber, byte>>(
-                        conversationId, conversationSubscribers));
+                if (_subscribers.TryGetValue(conversationId, out var conversationSubscribers))
+                {
+                    conversationSubscribers.Remove(subscriber);
+                    if (conversationSubscribers.Count == 0)
+                    {
+                        _subscribers.Remove(conversationId);
+                    }
+                }
             }
         }
     }
@@ -72,7 +102,7 @@ public sealed class RunEventPublisher : IRunEventPublisher
     private sealed class Subscriber
     {
         public Channel<RunEvent> Channel { get; } = System.Threading.Channels.Channel.CreateBounded<RunEvent>(
-            new BoundedChannelOptions(256)
+            new BoundedChannelOptions(SubscriberChannelCapacity)
             {
                 FullMode = BoundedChannelFullMode.DropOldest,
                 SingleReader = true,

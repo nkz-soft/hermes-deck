@@ -45,9 +45,9 @@ public static class SseEventStreamEndpoint
             return;
         }
 
-        // Without a conversation scope there is nothing this identity is authorized to receive, so the
-        // stream opens but stays empty until the client disconnects. With a scope, the conversation
-        // must be authorized; denials return a generic 404 that never leaks the conversation's existence.
+        // A conversation scope is required: without it there is nothing this identity is authorized to
+        // receive. Respond with a generic 404 (the same response used for an unauthorized conversation),
+        // so the absence of a scope and a denied scope are indistinguishable and never leak existence.
         if (string.IsNullOrEmpty(conversationId))
         {
             httpContext.Response.StatusCode = StatusCodes.Status404NotFound;
