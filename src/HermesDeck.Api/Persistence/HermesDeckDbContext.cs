@@ -41,6 +41,10 @@ public class HermesDeckDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // PostgreSQL-native column types (text[]/jsonb) are only applied on a relational
+        // provider so the InMemory provider used in tests does not reject them.
+        var isRelational = Database.IsRelational();
+
         modelBuilder.Entity<TelegramUser>(entity =>
         {
             entity.HasKey(e => e.TelegramUserId);
@@ -53,8 +57,11 @@ public class HermesDeckDbContext : DbContext
                 .WithOne()
                 .HasForeignKey<HermesIdentity>(e => e.TelegramUserId)
                 .OnDelete(DeleteBehavior.Restrict);
-            entity.Property(e => e.Roles).HasColumnType("text[]");
-            entity.Property(e => e.Permissions).HasColumnType("text[]");
+            if (isRelational)
+            {
+                entity.Property(e => e.Roles).HasColumnType("text[]");
+                entity.Property(e => e.Permissions).HasColumnType("text[]");
+            }
         });
 
         modelBuilder.Entity<Session>(entity =>
@@ -100,7 +107,19 @@ public class HermesDeckDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.RunId)
                 .OnDelete(DeleteBehavior.Cascade);
-            entity.Property(e => e.Metadata).HasColumnType("jsonb");
+            if (isRelational)
+            {
+                entity.Property(e => e.Metadata).HasColumnType("jsonb");
+            }
+            else
+            {
+                // The InMemory provider cannot map IReadOnlyDictionary natively; round-trip it
+                // through JSON so test runs can persist TimelineEvent rows.
+                entity.Property(e => e.Metadata).HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(
+                        v, (System.Text.Json.JsonSerializerOptions?)null) ?? new Dictionary<string, string>());
+            }
         });
 
         modelBuilder.Entity<ToolCall>(entity =>
@@ -141,7 +160,10 @@ public class HermesDeckDbContext : DbContext
         modelBuilder.Entity<Panel>(entity =>
         {
             entity.HasKey(e => e.PanelId);
-            entity.Property(e => e.AllowedActions).HasColumnType("text[]");
+            if (isRelational)
+            {
+                entity.Property(e => e.AllowedActions).HasColumnType("text[]");
+            }
         });
 
         modelBuilder.Entity<PanelIntent>(entity =>

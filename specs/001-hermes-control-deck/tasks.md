@@ -89,7 +89,7 @@ tested, and demonstrated independently after the shared foundation is complete.
 
 ### Tests for User Story 1
 
-- [ ] T046 [P] [US1] Add Telegram session contract tests for `POST /auth/telegram` in `tests/contract/HermesDeck.Api.ContractTests/AuthEndpointContractTests.cs`
+- [x] T046 [P] [US1] Add Telegram session contract tests for `POST /auth/telegram` in `tests/contract/HermesDeck.Api.ContractTests/AuthEndpointContractTests.cs`
 - [ ] T047 [P] [US1] Add conversation contract tests for `GET /conversations` and `POST /conversations` in `tests/contract/HermesDeck.Api.ContractTests/ConversationEndpointContractTests.cs`
 - [ ] T048 [P] [US1] Add message submission contract tests for `POST /conversations/{conversationId}/messages` in `tests/contract/HermesDeck.Api.ContractTests/MessageEndpointContractTests.cs`
 - [ ] T049 [P] [US1] Add run status contract tests for `GET /runs/{runId}` in `tests/contract/HermesDeck.Api.ContractTests/RunEndpointContractTests.cs`
@@ -100,10 +100,10 @@ tested, and demonstrated independently after the shared foundation is complete.
 
 ### Implementation for User Story 1
 
-- [ ] T054 [US1] Implement Telegram launch validation in `src/HermesDeck.Api/Auth/TelegramLaunchValidator.cs`
-- [ ] T055 [US1] Implement Hermes identity mapping in `src/HermesDeck.Api/Auth/HermesIdentityMapper.cs`
-- [ ] T056 [US1] Implement session token issuing and validation in `src/HermesDeck.Api/Auth/SessionTokenService.cs`
-- [ ] T057 [US1] Implement `POST /auth/telegram` endpoint in `src/HermesDeck.Api/Auth/AuthEndpoints.cs`
+- [x] T054 [US1] Implement Telegram launch validation in `src/HermesDeck.Api/Auth/TelegramLaunchValidator.cs`
+- [x] T055 [US1] Implement Hermes identity mapping in `src/HermesDeck.Api/Auth/HermesIdentityMapper.cs`
+- [x] T056 [US1] Implement session token issuing and validation in `src/HermesDeck.Api/Auth/SessionTokenService.cs`
+- [x] T057 [US1] Implement `POST /auth/telegram` endpoint in `src/HermesDeck.Api/Auth/AuthEndpoints.cs`
 - [ ] T058 [US1] Implement conversation persistence service in `src/HermesDeck.Api/Conversations/ConversationService.cs`
 - [ ] T059 [US1] Implement conversation endpoints in `src/HermesDeck.Api/Conversations/ConversationEndpoints.cs`
 - [ ] T060 [US1] Implement message-to-run orchestration in `src/HermesDeck.Api/Runs/RunOrchestrator.cs`
