@@ -20,7 +20,10 @@ builder.Services.AddDbContext<HermesDeckDbContext>((sp, options) =>
 {
     if (isTesting)
     {
-        options.UseInMemoryDatabase("hermes-deck-tests");
+        // Allow each test host to isolate its store by supplying a unique database name;
+        // otherwise the InMemory provider shares one root-keyed store across all hosts.
+        var databaseName = builder.Configuration["HermesDeck:TestDatabaseName"] ?? "hermes-deck-tests";
+        options.UseInMemoryDatabase(databaseName);
     }
     else
     {

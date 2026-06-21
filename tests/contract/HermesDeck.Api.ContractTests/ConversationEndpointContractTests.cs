@@ -1,33 +1,24 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
-using System.Web;
 using FluentAssertions;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Configuration;
 using Xunit;
 
 namespace HermesDeck.Api.ContractTests;
 
 /// <summary>
 /// T047: Contract tests for <c>GET /conversations</c> and <c>POST /conversations</c>. Exercises the
-/// real Minimal API endpoints via <see cref="WebApplicationFactory{TEntryPoint}"/> to assert
-/// conformance with the OpenAPI <c>Conversation</c> contract: unauthenticated requests yield a
-/// generic <c>401</c> with no leaked detail, an authenticated <c>GET</c> returns a <c>200</c> array,
-/// and an authenticated <c>POST</c> returns a <c>201</c> with the created conversation shape, which
-/// then appears in a subsequent <c>GET</c>.
+/// real Minimal API endpoints via <see cref="ContractApiFactory"/> to assert conformance with the
+/// OpenAPI <c>Conversation</c> contract: unauthenticated requests yield a generic <c>401</c> with no
+/// leaked detail, an authenticated <c>GET</c> returns a <c>200</c> array, an authenticated <c>POST</c>
+/// returns a <c>201</c> with the created conversation shape (which then appears in a subsequent
+/// <c>GET</c>), and conversations are scoped to the owning identity.
 /// </summary>
-public class ConversationEndpointContractTests
-    : IClassFixture<ConversationEndpointContractTests.ConversationApiFactory>
+public class ConversationEndpointContractTests : IClassFixture<ContractApiFactory>
 {
-    private const string BotToken = "123456:TEST-BOT-TOKEN";
+    private readonly ContractApiFactory _factory;
 
-    private readonly ConversationApiFactory _factory;
-
-    public ConversationEndpointContractTests(ConversationApiFactory factory)
+    public ConversationEndpointContractTests(ContractApiFactory factory)
     {
         _factory = factory;
     }
@@ -50,10 +41,7 @@ public class ConversationEndpointContractTests
     [Fact]
     public async Task ListConversations_Authenticated_Returns200_Array()
     {
-        using var client = _factory.CreateClient();
-        var token = await AuthenticateAsync(client);
-        client.DefaultRequestHeaders.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        using var client = await TelegramTestInitData.CreateAuthenticatedClientAsync(_factory);
 
         var response = await client.GetAsync("/conversations");
 
@@ -66,10 +54,7 @@ public class ConversationEndpointContractTests
     [Fact]
     public async Task CreateConversation_Authenticated_Returns201_WithConversationShape()
     {
-        using var client = _factory.CreateClient();
-        var token = await AuthenticateAsync(client);
-        client.DefaultRequestHeaders.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        using var client = await TelegramTestInitData.CreateAuthenticatedClientAsync(_factory);
 
         var response = await client.PostAsJsonAsync("/conversations", new { title = "Planning chat" });
 
@@ -94,10 +79,7 @@ public class ConversationEndpointContractTests
     [Fact]
     public async Task CreateConversation_ThenList_IncludesCreatedConversation()
     {
-        using var client = _factory.CreateClient();
-        var token = await AuthenticateAsync(client);
-        client.DefaultRequestHeaders.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        using var client = await TelegramTestInitData.CreateAuthenticatedClientAsync(_factory);
 
         var createResponse = await client.PostAsJsonAsync(
             "/conversations",
@@ -116,69 +98,28 @@ public class ConversationEndpointContractTests
             .Should().Contain(createdId);
     }
 
-    private static async Task<string> AuthenticateAsync(HttpClient client)
+    [Fact]
+    public async Task ListConversations_DoesNotLeakAnotherIdentitysConversations()
     {
-        var initData = BuildSignedInitData(BotToken);
-        var response = await client.PostAsJsonAsync("/auth/telegram", new { initData });
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        // Identity A creates a conversation.
+        using var clientA = await TelegramTestInitData.CreateAuthenticatedClientAsync(
+            _factory, userId: 111111, username: "alice");
+        var createResponse = await clientA.PostAsJsonAsync(
+            "/conversations",
+            new { title = "Alice private" });
+        createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        using var createdDoc = JsonDocument.Parse(await createResponse.Content.ReadAsStringAsync());
+        var aliceConversationId = createdDoc.RootElement.GetProperty("conversationId").GetString();
 
-        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        return doc.RootElement.GetProperty("sessionToken").GetString()!;
-    }
+        // Identity B must not see identity A's conversation.
+        using var clientB = await TelegramTestInitData.CreateAuthenticatedClientAsync(
+            _factory, userId: 222222, username: "bob");
+        var listResponse = await clientB.GetAsync("/conversations");
+        listResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-    private static string BuildSignedInitData(string botToken)
-    {
-        var userJson = JsonSerializer.Serialize(new
-        {
-            id = 525252,
-            first_name = "Grace",
-            last_name = "Hopper",
-            username = "grace",
-            language_code = "en"
-        });
-
-        var authDate = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
-
-        var fields = new SortedDictionary<string, string>(StringComparer.Ordinal)
-        {
-            ["auth_date"] = authDate,
-            ["user"] = userJson
-        };
-
-        var dataCheckString = string.Join('\n', fields.Select(kvp => $"{kvp.Key}={kvp.Value}"));
-
-        var secretKey = HMACSHA256.HashData(
-            Encoding.UTF8.GetBytes("WebAppData"),
-            Encoding.UTF8.GetBytes(botToken));
-        var hash = Convert.ToHexStringLower(
-            HMACSHA256.HashData(secretKey, Encoding.UTF8.GetBytes(dataCheckString)));
-
-        var query = new[]
-        {
-            $"auth_date={HttpUtility.UrlEncode(authDate)}",
-            $"user={HttpUtility.UrlEncode(userJson)}",
-            $"hash={hash}"
-        };
-
-        return string.Join('&', query);
-    }
-
-    public sealed class ConversationApiFactory : WebApplicationFactory<Program>
-    {
-        protected override void ConfigureWebHost(IWebHostBuilder builder)
-        {
-            builder.UseEnvironment("Testing");
-            builder.ConfigureAppConfiguration((_, config) =>
-            {
-                config.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["HermesDeck:AllowedWorkspaceId"] = "workspace-contract-tests",
-                    ["HermesDeck:Telegram:BotToken"] = BotToken,
-                    ["HermesDeck:Telegram:MaxLaunchAge"] = "00:05:00",
-                    ["HermesDeck:SessionToken:SigningKey"] = "contract-test-signing-key-0123456789",
-                    ["HermesDeck:SessionToken:TokenLifetime"] = "12:00:00"
-                });
-            });
-        }
+        using var listDoc = JsonDocument.Parse(await listResponse.Content.ReadAsStringAsync());
+        listDoc.RootElement.EnumerateArray()
+            .Select(e => e.GetProperty("conversationId").GetString())
+            .Should().NotContain(aliceConversationId);
     }
 }
