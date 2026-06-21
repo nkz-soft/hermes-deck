@@ -1,11 +1,11 @@
 """gRPC server entry point for the Hermes Agent Service.
 
 Builds a ``grpc`` server, registers an ``AgentServiceServicer``
-implementation, and binds it to a port. The servicer methods are skeletons
-for this foundational phase: they return ``UNIMPLEMENTED`` / raise
-``NotImplementedError``. Later phases (US1/US2) fill in the real handler
-logic (ChatStream, GetRunStatus, GetTimeline, SubmitApproval,
-SubmitPanelIntent).
+implementation, and binds it to a port. ``ChatStream`` and ``GetRunStatus``
+are implemented (US1, T063/T064) and delegate to dedicated handlers sharing a
+single ``RunStore``. The remaining methods (``GetTimeline``,
+``SubmitApproval``, ``SubmitPanelIntent``) land in later phases and currently
+return ``UNIMPLEMENTED``.
 """
 from __future__ import annotations
 

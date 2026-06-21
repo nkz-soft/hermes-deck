@@ -19,7 +19,7 @@ import uuid
 from typing import Iterable, Iterator
 
 from app.grpc.generated import agent_service_pb2 as pb
-from app.hermes_agent.run_state import RunNotFoundError, RunStatus, RunStore
+from app.hermes_agent.run_state import RunStatus, RunStore
 
 
 def _new_event_id() -> str:
@@ -41,11 +41,8 @@ def _agent_reply_chunks(content: str) -> list[str]:
 
 
 def _ensure_running(run_store: RunStore, run_id: str) -> None:
-    """Create the run if new, then transition it to RUNNING."""
-    try:
-        run_store.set_status(run_id, RunStatus.RUNNING)
-    except RunNotFoundError:
-        run_store.create_run(run_id, status=RunStatus.RUNNING)
+    """Create the run if new, then transition it to RUNNING (atomically)."""
+    run_store.get_or_create_run(run_id, status=RunStatus.RUNNING)
 
 
 def handle_chat_stream(
@@ -77,24 +74,37 @@ def handle_chat_stream(
             status=pb.RUN_STATUS_RUNNING,
         )
 
-        for chunk in _agent_reply_chunks(request.content):
+        try:
+            for chunk in _agent_reply_chunks(request.content):
+                yield pb.ChatStreamEvent(
+                    event_id=_new_event_id(),
+                    run_id=run_id,
+                    type="chat.message.delta",
+                    content_delta=chunk,
+                )
+
             yield pb.ChatStreamEvent(
                 event_id=_new_event_id(),
                 run_id=run_id,
-                type="chat.message.delta",
-                content_delta=chunk,
+                type="chat.message.completed",
             )
 
-        yield pb.ChatStreamEvent(
-            event_id=_new_event_id(),
-            run_id=run_id,
-            type="chat.message.completed",
-        )
-
-        run_store.set_status(run_id, RunStatus.COMPLETED)
-        yield pb.ChatStreamEvent(
-            event_id=_new_event_id(),
-            run_id=run_id,
-            type="run.status.changed",
-            status=pb.RUN_STATUS_COMPLETED,
-        )
+            run_store.set_status(run_id, RunStatus.COMPLETED)
+            yield pb.ChatStreamEvent(
+                event_id=_new_event_id(),
+                run_id=run_id,
+                type="run.status.changed",
+                status=pb.RUN_STATUS_COMPLETED,
+            )
+        except Exception as exc:  # noqa: BLE001 - surface any failure as a FAILED run
+            # A run that started must never be left stuck in RUNNING; transition it to
+            # FAILED and emit a terminal status event before propagating the error.
+            run_store.set_status(run_id, RunStatus.FAILED)
+            yield pb.ChatStreamEvent(
+                event_id=_new_event_id(),
+                run_id=run_id,
+                type="run.status.changed",
+                summary=str(exc),
+                status=pb.RUN_STATUS_FAILED,
+            )
+            raise
