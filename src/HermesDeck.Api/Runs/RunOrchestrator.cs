@@ -1,4 +1,5 @@
 using System.Text.Json;
+using HermesDeck.Api.Auth;
 using HermesDeck.Api.Domain;
 using HermesDeck.Api.Events;
 using HermesDeck.Api.Persistence;
@@ -55,6 +56,7 @@ public sealed class RunOrchestrator : IRunOrchestrator
 {
     private readonly HermesDeckDbContext _db;
     private readonly IRunEventPublisher _eventPublisher;
+    private readonly IHermesAuthorizationService _authorizationService;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<RunOrchestrator> _logger;
@@ -62,12 +64,14 @@ public sealed class RunOrchestrator : IRunOrchestrator
     public RunOrchestrator(
         HermesDeckDbContext db,
         IRunEventPublisher eventPublisher,
+        IHermesAuthorizationService authorizationService,
         IServiceScopeFactory scopeFactory,
         TimeProvider timeProvider,
         ILogger<RunOrchestrator> logger)
     {
         _db = db;
         _eventPublisher = eventPublisher;
+        _authorizationService = authorizationService;
         _scopeFactory = scopeFactory;
         _timeProvider = timeProvider;
         _logger = logger;
@@ -100,16 +104,19 @@ public sealed class RunOrchestrator : IRunOrchestrator
             StartedAt = now
         };
 
+        // Callers authorize the conversation (which implies it exists and is owned) before invoking
+        // this method, so a missing conversation here is an invariant violation rather than a normal
+        // not-found; fail fast instead of persisting an orphan run.
+        var conversation = await _db.Conversations
+            .FirstOrDefaultAsync(c => c.ConversationId == conversationId, cancellationToken)
+            ?? throw new InvalidOperationException(
+                $"Conversation '{conversationId}' was not found when submitting a message.");
+
         _db.Messages.Add(message);
         _db.AgentRuns.Add(run);
 
-        var conversation = await _db.Conversations
-            .FirstOrDefaultAsync(c => c.ConversationId == conversationId, cancellationToken);
-        if (conversation is not null)
-        {
-            conversation.LastRunId = run.RunId;
-            conversation.UpdatedAt = now;
-        }
+        conversation.LastRunId = run.RunId;
+        conversation.UpdatedAt = now;
 
         await _db.SaveChangesAsync(cancellationToken);
 
@@ -120,7 +127,7 @@ public sealed class RunOrchestrator : IRunOrchestrator
                 "run.status.changed",
                 "Run is running",
                 now,
-                SerializeRunStatusPayload(run.RunId, "running")),
+                SerializeRunStatusPayload(run.RunId, AgentRunStatus.Running)),
             cancellationToken);
 
         DispatchRunner(new AgentChatRunContext(
@@ -143,15 +150,20 @@ public sealed class RunOrchestrator : IRunOrchestrator
             return null;
         }
 
+        // Ownership is decided by the single authorization service (shared with every other protected
+        // target) rather than a hand-rolled join here, so the ownership model lives in one place.
+        var authorization = await _authorizationService.AuthorizeAsync(
+            identityId,
+            ProtectedTargetType.Run,
+            runId,
+            cancellationToken);
+        if (!authorization.IsAuthorized)
+        {
+            return null;
+        }
+
         return await _db.AgentRuns
-            .Join(
-                _db.Conversations,
-                run => run.ConversationId,
-                conversation => conversation.ConversationId,
-                (run, conversation) => new { Run = run, conversation.IdentityId })
-            .Where(x => x.Run.RunId == runId && x.IdentityId == identityId)
-            .Select(x => x.Run)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(r => r.RunId == runId, cancellationToken);
     }
 
     /// <summary>
@@ -194,6 +206,13 @@ public sealed class RunOrchestrator : IRunOrchestrator
                 return;
             }
 
+            // Do not clobber a run that already reached a terminal state (e.g. a runner that completed
+            // and then threw during cleanup): completed -> failed is not a valid transition.
+            if (run.Status is AgentRunStatus.Completed or AgentRunStatus.Failed)
+            {
+                return;
+            }
+
             run.Status = AgentRunStatus.Failed;
             run.FailureReason = failureReason;
             run.CompletedAt = _timeProvider.GetUtcNow();
@@ -206,7 +225,7 @@ public sealed class RunOrchestrator : IRunOrchestrator
                 "run.status.changed",
                 "Run failed",
                 run.CompletedAt.Value,
-                SerializeRunStatusPayload(run.RunId, "failed")));
+                SerializeRunStatusPayload(run.RunId, AgentRunStatus.Failed)));
         }
         catch (Exception ex)
         {
@@ -217,6 +236,6 @@ public sealed class RunOrchestrator : IRunOrchestrator
         }
     }
 
-    private static string SerializeRunStatusPayload(string runId, string status) =>
-        JsonSerializer.Serialize(new { runId, status });
+    private static string SerializeRunStatusPayload(string runId, AgentRunStatus status) =>
+        JsonSerializer.Serialize(new { runId, status = AgentRunStatusContract.ToContractString(status) });
 }

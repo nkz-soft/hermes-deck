@@ -1,5 +1,4 @@
 using HermesDeck.Api.Auth;
-using HermesDeck.Api.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -46,20 +45,10 @@ public static class RunEndpoints
             return Results.Ok(new AgentRunResponse(
                 run.RunId,
                 run.ConversationId,
-                ToStatusString(run.Status),
+                AgentRunStatusContract.ToContractString(run.Status),
                 run.ReviewReason));
         });
 
         return app;
     }
-
-    private static string ToStatusString(AgentRunStatus status) => status switch
-    {
-        AgentRunStatus.Waiting => "waiting",
-        AgentRunStatus.Running => "running",
-        AgentRunStatus.ReviewRequired => "review-required",
-        AgentRunStatus.Completed => "completed",
-        AgentRunStatus.Failed => "failed",
-        _ => status.ToString().ToLowerInvariant()
-    };
 }
