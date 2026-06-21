@@ -57,9 +57,7 @@ public static class AuthEndpoints
                 "telegram",
                 cancellationToken);
 
-            var displayName = validation.DisplayName
-                ?? validation.Username
-                ?? identity.TelegramUserId;
+            var displayName = validation.DisplayName ?? identity.TelegramUserId;
 
             var response = new SessionResponse(
                 issued.Token,

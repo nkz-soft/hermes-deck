@@ -61,10 +61,15 @@ public sealed class SessionAuthenticationMiddleware
     }
 
     private static bool IsAnonymous(PathString path) =>
-        AnonymousPaths.Any(p => path.StartsWithSegments(p, StringComparison.OrdinalIgnoreCase));
+        AnonymousPaths.Any(p => path.Equals(p, StringComparison.OrdinalIgnoreCase));
 
     private static async Task WriteUnauthorizedAsync(HttpContext context)
     {
+        if (context.Response.HasStarted)
+        {
+            return;
+        }
+
         context.Response.Clear();
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
         context.Response.ContentType = MediaTypeNames.Application.Json;
