@@ -91,5 +91,6 @@ test('launches, streams agent progress, sends a message, and shows run status', 
   await page.getByRole('button', { name: 'Send' }).click()
 
   await expect(page.getByText('hi hermes')).toBeVisible()
-  await expect(page.getByRole('status')).toBeVisible()
+  // Starting a run surfaces the run-status badge with a concrete lifecycle state.
+  await expect(page.locator('[data-status]')).toHaveText(/Waiting|Running|Completed/)
 })
