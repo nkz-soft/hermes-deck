@@ -237,6 +237,9 @@ data/processed/**
 data/fixtures/generated/**
 runs/
 !src/HermesDeck.Api/Runs/
+!src/HermesDeck.Web/src/features/runs/
+tests/e2e/hermes-deck-web/test-results/
+tests/e2e/hermes-deck-web/playwright-report/
 reports/*.md
 reports/**
 artifacts/
