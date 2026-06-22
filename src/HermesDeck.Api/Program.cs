@@ -3,6 +3,7 @@ using HermesDeck.Api.Configuration;
 using HermesDeck.Api.Conversations;
 using HermesDeck.Api.Events;
 using HermesDeck.Api.Infrastructure;
+using HermesDeck.Api.Observability;
 using HermesDeck.Api.Persistence;
 using HermesDeck.Api.Runs;
 using Microsoft.EntityFrameworkCore;
@@ -42,6 +43,7 @@ builder.Services.AddScoped<IHermesAuthorizationService, HermesAuthorizationServi
 builder.Services.AddScoped<ICurrentIdentityAccessor, CurrentIdentityAccessor>();
 builder.Services.AddScoped<IConversationService, ConversationService>();
 builder.Services.AddSingleton<IRunEventPublisher, RunEventPublisher>();
+builder.Services.AddSingleton<IAuditEventWriter, AuditEventWriter>();
 builder.Services.AddScoped<IRunOrchestrator, RunOrchestrator>();
 builder.Services.AddScoped<IAgentChatRunner, NullAgentChatRunner>();
 

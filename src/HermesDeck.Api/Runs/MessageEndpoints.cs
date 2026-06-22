@@ -1,4 +1,5 @@
 using HermesDeck.Api.Auth;
+using HermesDeck.Api.Observability;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -34,6 +35,8 @@ public static class MessageEndpoints
             ICurrentIdentityAccessor currentIdentityAccessor,
             IHermesAuthorizationService authorizationService,
             IRunOrchestrator runOrchestrator,
+            IAuditEventWriter auditEventWriter,
+            TimeProvider timeProvider,
             CancellationToken cancellationToken) =>
         {
             var current = currentIdentityAccessor.Current;
@@ -65,6 +68,20 @@ public static class MessageEndpoints
                 conversationId,
                 current.IdentityId,
                 content,
+                cancellationToken);
+
+            await auditEventWriter.WriteAsync(
+                new AuditEvent(
+                    Guid.NewGuid().ToString("N"),
+                    current.IdentityId,
+                    AuditActions.MessageSubmitted,
+                    TargetType: "run",
+                    TargetId: result.RunId,
+                    timeProvider.GetUtcNow(),
+                    Metadata: new Dictionary<string, string>
+                    {
+                        ["conversationId"] = conversationId
+                    }),
                 cancellationToken);
 
             return Results.Accepted(

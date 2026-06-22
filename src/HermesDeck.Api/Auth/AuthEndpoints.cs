@@ -1,3 +1,4 @@
+using HermesDeck.Api.Observability;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -33,6 +34,8 @@ public static class AuthEndpoints
             ITelegramLaunchValidator validator,
             IHermesIdentityMapper identityMapper,
             ISessionTokenService sessionTokenService,
+            IAuditEventWriter auditEventWriter,
+            TimeProvider timeProvider,
             CancellationToken cancellationToken) =>
         {
             if (request is null || string.IsNullOrWhiteSpace(request.InitData))
@@ -55,6 +58,16 @@ public static class AuthEndpoints
             var issued = await sessionTokenService.IssueAsync(
                 identity.IdentityId,
                 "telegram",
+                cancellationToken);
+
+            await auditEventWriter.WriteAsync(
+                new AuditEvent(
+                    Guid.NewGuid().ToString("N"),
+                    identity.IdentityId,
+                    AuditActions.AuthLogin,
+                    TargetType: "identity",
+                    TargetId: identity.IdentityId,
+                    timeProvider.GetUtcNow()),
                 cancellationToken);
 
             var displayName = validation.DisplayName ?? identity.TelegramUserId;

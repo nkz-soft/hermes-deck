@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using HermesDeck.Api.Auth;
+using HermesDeck.Api.Observability;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -36,6 +37,8 @@ public static class SseEventStreamEndpoint
         ICurrentIdentityAccessor currentIdentityAccessor,
         IHermesAuthorizationService authorizationService,
         IRunEventPublisher publisher,
+        IAuditEventWriter auditEventWriter,
+        TimeProvider timeProvider,
         CancellationToken cancellationToken)
     {
         var current = currentIdentityAccessor.Current;
@@ -50,6 +53,8 @@ public static class SseEventStreamEndpoint
         // so the absence of a scope and a denied scope are indistinguishable and never leak existence.
         if (string.IsNullOrEmpty(conversationId))
         {
+            await WriteDeepLinkDenialAsync(
+                auditEventWriter, timeProvider, current.IdentityId, conversationId, cancellationToken);
             httpContext.Response.StatusCode = StatusCodes.Status404NotFound;
             return;
         }
@@ -62,6 +67,8 @@ public static class SseEventStreamEndpoint
 
         if (!authorization.IsAuthorized)
         {
+            await WriteDeepLinkDenialAsync(
+                auditEventWriter, timeProvider, current.IdentityId, conversationId, cancellationToken);
             httpContext.Response.StatusCode = StatusCodes.Status404NotFound;
             return;
         }
@@ -74,11 +81,47 @@ public static class SseEventStreamEndpoint
         // subscription is established before any event is published.
         await httpContext.Response.Body.FlushAsync(cancellationToken);
 
-        await foreach (var runEvent in publisher.SubscribeAsync(conversationId, cancellationToken))
+        try
         {
-            await WriteFrameAsync(httpContext, runEvent, cancellationToken);
+            await foreach (var runEvent in publisher.SubscribeAsync(conversationId, cancellationToken))
+            {
+                await WriteFrameAsync(httpContext, runEvent, cancellationToken);
+            }
+        }
+        finally
+        {
+            // The stream ends when the client disconnects or the request is aborted; record the
+            // interruption with ids only (no protected content). Best-effort: the request token is
+            // already cancelled here, so use CancellationToken.None to ensure the write completes.
+            await auditEventWriter.WriteAsync(
+                new AuditEvent(
+                    Guid.NewGuid().ToString("N"),
+                    current.IdentityId,
+                    AuditActions.StreamInterrupted,
+                    TargetType: "conversation",
+                    TargetId: conversationId,
+                    timeProvider.GetUtcNow()),
+                CancellationToken.None);
         }
     }
+
+    private static Task WriteDeepLinkDenialAsync(
+        IAuditEventWriter auditEventWriter,
+        TimeProvider timeProvider,
+        string identityId,
+        string? attemptedConversationId,
+        CancellationToken cancellationToken) =>
+        auditEventWriter.WriteAsync(
+            new AuditEvent(
+                Guid.NewGuid().ToString("N"),
+                identityId,
+                AuditActions.DeepLinkDenied,
+                TargetType: "conversation",
+                // Only the attempted id is recorded; the denial never confirms existence or leaks any
+                // protected detail beyond the id the caller already supplied.
+                TargetId: string.IsNullOrEmpty(attemptedConversationId) ? null : attemptedConversationId,
+                timeProvider.GetUtcNow()),
+            cancellationToken);
 
     private static async Task WriteFrameAsync(
         HttpContext httpContext,
