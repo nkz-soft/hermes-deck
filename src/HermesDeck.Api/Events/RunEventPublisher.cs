@@ -56,12 +56,17 @@ public sealed class RunEventPublisher : IRunEventPublisher
         return Task.CompletedTask;
     }
 
-    public async IAsyncEnumerable<RunEvent> SubscribeAsync(
+    public IAsyncEnumerable<RunEvent> SubscribeAsync(
         string conversationId,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(conversationId);
 
+        // Register the subscriber eagerly, at call time, rather than lazily on the first enumeration
+        // step. This is deliberate: callers (the SSE endpoint) need the subscription to exist before
+        // they flush response headers and trigger work that publishes events, so that no event
+        // published between "stream opened" and "first MoveNext" is lost. A normal method registers
+        // synchronously; an `async` iterator would defer this body until the first MoveNextAsync.
         var subscriber = new Subscriber();
         lock (_gate)
         {
@@ -74,6 +79,14 @@ public sealed class RunEventPublisher : IRunEventPublisher
             conversationSubscribers.Add(subscriber);
         }
 
+        return StreamAsync(conversationId, subscriber, cancellationToken);
+    }
+
+    private async IAsyncEnumerable<RunEvent> StreamAsync(
+        string conversationId,
+        Subscriber subscriber,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
         try
         {
             await foreach (var runEvent in subscriber.Channel.Reader.ReadAllAsync(cancellationToken))

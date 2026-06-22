@@ -36,15 +36,21 @@ public sealed class AuditEventWriter : IAuditEventWriter
             : auditEvent.OccurredAt;
 
         // Audit events are recorded with structured properties only (ids + action), never protected
-        // content. The message template names each property so log sinks can filter on them.
+        // content. The message template names each property so log sinks can filter on them. Metadata
+        // is rendered as a flat key=value list (callers only ever put ids/correlation keys here).
+        var metadata = auditEvent.Metadata is { Count: > 0 }
+            ? string.Join(',', auditEvent.Metadata.Select(kvp => $"{kvp.Key}={kvp.Value}"))
+            : null;
+
 #pragma warning disable CA2254 // Template is constant; structured properties are supplied positionally.
         _logger.LogInformation(
-            "Audit event {AuditAction} eventId={AuditEventId} identityId={AuditIdentityId} targetType={AuditTargetType} targetId={AuditTargetId} occurredAt={AuditOccurredAt}",
+            "Audit event {AuditAction} eventId={AuditEventId} identityId={AuditIdentityId} targetType={AuditTargetType} targetId={AuditTargetId} metadata={AuditMetadata} occurredAt={AuditOccurredAt}",
             auditEvent.Action,
             auditEvent.EventId,
             auditEvent.IdentityId,
             auditEvent.TargetType,
             auditEvent.TargetId,
+            metadata,
             occurredAt);
 #pragma warning restore CA2254
 

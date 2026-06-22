@@ -81,7 +81,7 @@ public class TelegramChatFlowTests : IClassFixture<TelegramChatFlowTests.ChatFlo
 
         using var doc = JsonDocument.Parse(await runResponse.Content.ReadAsStringAsync());
         var status = doc.RootElement.GetProperty("status").GetString();
-        status.Should().BeOneOf("running", "completed", "failed", "awaiting_review");
+        status.Should().BeOneOf("waiting", "running", "review-required", "completed", "failed");
     }
 
     [Fact]

@@ -73,17 +73,20 @@ public static class SseEventStreamEndpoint
             return;
         }
 
+        // Establish the subscription BEFORE flushing headers. SubscribeAsync registers the subscriber
+        // synchronously at call time, so any event published after the client observes the flushed
+        // headers (e.g. it then submits a message that triggers the run) is guaranteed to be delivered
+        // — there is no window between "headers sent" and "subscriber registered".
+        var events = publisher.SubscribeAsync(conversationId, cancellationToken);
+
         httpContext.Response.Headers.ContentType = "text/event-stream";
         httpContext.Response.Headers.CacheControl = "no-cache";
         httpContext.Response.Headers.Connection = "keep-alive";
-
-        // Flush the headers so the client's HttpCompletionOption.ResponseHeadersRead returns and the
-        // subscription is established before any event is published.
         await httpContext.Response.Body.FlushAsync(cancellationToken);
 
         try
         {
-            await foreach (var runEvent in publisher.SubscribeAsync(conversationId, cancellationToken))
+            await foreach (var runEvent in events)
             {
                 await WriteFrameAsync(httpContext, runEvent, cancellationToken);
             }
