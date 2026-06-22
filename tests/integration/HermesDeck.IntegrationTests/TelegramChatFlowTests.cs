@@ -121,6 +121,41 @@ public class TelegramChatFlowTests : IClassFixture<TelegramChatFlowTests.ChatFlo
     }
 
     [Fact]
+    public async Task Sse_Stream_Authenticates_Via_Access_Token_Query_Without_Header()
+    {
+        // A browser EventSource cannot set an Authorization header, so the frontend passes the
+        // session token as the access_token query parameter. The stream must authenticate that way.
+        var authedClient = await CreateAuthenticatedClientAsync(userId: 100500);
+        var conversationId = await CreateConversationAsync(authedClient);
+        var token = authedClient.DefaultRequestHeaders.Authorization!.Parameter!;
+
+        using var bareClient = _factory.CreateClient(); // deliberately no Authorization header
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"/events/stream?conversationId={conversationId}&access_token={Uri.EscapeDataString(token)}");
+        using var response = await bareClient.SendAsync(
+            request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.Content.Headers.ContentType!.MediaType.Should().Be("text/event-stream");
+    }
+
+    [Fact]
+    public async Task Sse_Stream_Without_Any_Credential_Is_Unauthorized()
+    {
+        using var bareClient = _factory.CreateClient();
+
+        var response = await bareClient.GetAsync("/events/stream?conversationId=anything");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+
+        var bodyText = await response.Content.ReadAsStringAsync();
+        bodyText.Should().NotContainEquivalentOf("Exception");
+        bodyText.Should().NotContainEquivalentOf("StackTrace");
+    }
+
+    [Fact]
     public async Task Tampered_Telegram_Launch_Data_Is_Rejected_With_401_And_No_Leaked_Detail()
     {
         using var client = _factory.CreateClient();
