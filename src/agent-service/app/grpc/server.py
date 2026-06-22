@@ -1,11 +1,11 @@
 """gRPC server entry point for the Hermes Agent Service.
 
 Builds a ``grpc`` server, registers an ``AgentServiceServicer``
-implementation, and binds it to a port. The servicer methods are skeletons
-for this foundational phase: they return ``UNIMPLEMENTED`` / raise
-``NotImplementedError``. Later phases (US1/US2) fill in the real handler
-logic (ChatStream, GetRunStatus, GetTimeline, SubmitApproval,
-SubmitPanelIntent).
+implementation, and binds it to a port. ``ChatStream`` and ``GetRunStatus``
+are implemented (US1, T063/T064) and delegate to dedicated handlers sharing a
+single ``RunStore``. The remaining methods (``GetTimeline``,
+``SubmitApproval``, ``SubmitPanelIntent``) land in later phases and currently
+return ``UNIMPLEMENTED``.
 """
 from __future__ import annotations
 
@@ -13,28 +13,31 @@ from concurrent import futures
 
 import grpc
 
+from app.grpc.chat_stream import handle_chat_stream
 from app.grpc.generated import agent_service_pb2_grpc
+from app.grpc.run_status import handle_get_run_status
+from app.hermes_agent.run_state import RunStore
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 50051
 
 
 class AgentServiceServicerImpl(agent_service_pb2_grpc.AgentServiceServicer):
-    """Skeleton AgentService implementation.
+    """AgentService implementation.
 
-    All methods are currently unimplemented; real business logic lands in
-    later phases (T063/T064/T087/T088/T106).
+    ChatStream/GetRunStatus are implemented (US1, T063/T064) and delegate to
+    dedicated handlers sharing a single RunStore. The remaining methods land
+    in later phases (T087/T088/T106) and stay UNIMPLEMENTED for now.
     """
 
+    def __init__(self, run_store: RunStore | None = None) -> None:
+        self._run_store = run_store if run_store is not None else RunStore()
+
     def ChatStream(self, request_iterator, context):
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("ChatStream not implemented")
-        raise NotImplementedError("ChatStream not implemented")
+        yield from handle_chat_stream(request_iterator, context, self._run_store)
 
     def GetRunStatus(self, request, context):
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("GetRunStatus not implemented")
-        raise NotImplementedError("GetRunStatus not implemented")
+        return handle_get_run_status(request, context, self._run_store)
 
     def GetTimeline(self, request, context):
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)

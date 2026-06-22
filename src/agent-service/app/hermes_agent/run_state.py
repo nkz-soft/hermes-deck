@@ -55,6 +55,22 @@ class RunStore:
             self._runs[run_id] = run
             return run
 
+    def get_or_create_run(self, run_id: str, status: RunStatus) -> RunState:
+        """Atomically fetch the run for run_id, or create it with the given status.
+
+        Unlike a get-then-create sequence, this holds the lock for the whole
+        check-and-set so concurrent callers for the same run_id cannot both
+        create (and clobber) the run.
+        """
+        with self._lock:
+            run = self._runs.get(run_id)
+            if run is None:
+                run = RunState(run_id=run_id, status=status)
+                self._runs[run_id] = run
+            else:
+                run.status = status
+            return run
+
     def get_run(self, run_id: str) -> RunState:
         """Return the RunState for run_id, or raise RunNotFoundError."""
         with self._lock:

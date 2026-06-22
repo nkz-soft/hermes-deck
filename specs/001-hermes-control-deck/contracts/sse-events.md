@@ -6,6 +6,8 @@ Transport: `text/event-stream`
 
 Authorization: Requires an active Hermes Deck session. Every emitted event must be scoped to content the current identity can access.
 
+Scope: The endpoint accepts an optional `conversationId` query parameter; the frontend opens a stream for the active conversation, and the server only delivers events the current identity is authorized to see for that conversation. If the conversation is not authorized, the server returns a generic error (e.g. `404`) that never reveals whether the conversation exists.
+
 ## Common Envelope
 
 ```json

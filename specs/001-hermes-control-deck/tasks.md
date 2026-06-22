@@ -89,36 +89,36 @@ tested, and demonstrated independently after the shared foundation is complete.
 
 ### Tests for User Story 1
 
-- [ ] T046 [P] [US1] Add Telegram session contract tests for `POST /auth/telegram` in `tests/contract/HermesDeck.Api.ContractTests/AuthEndpointContractTests.cs`
-- [ ] T047 [P] [US1] Add conversation contract tests for `GET /conversations` and `POST /conversations` in `tests/contract/HermesDeck.Api.ContractTests/ConversationEndpointContractTests.cs`
-- [ ] T048 [P] [US1] Add message submission contract tests for `POST /conversations/{conversationId}/messages` in `tests/contract/HermesDeck.Api.ContractTests/MessageEndpointContractTests.cs`
-- [ ] T049 [P] [US1] Add run status contract tests for `GET /runs/{runId}` in `tests/contract/HermesDeck.Api.ContractTests/RunEndpointContractTests.cs`
-- [ ] T050 [P] [US1] Add SSE chat event contract tests in `tests/contract/HermesDeck.Api.ContractTests/ChatSseContractTests.cs`
-- [ ] T051 [P] [US1] Add Agent Service `ChatStream` contract tests in `src/agent-service/tests/test_chat_stream_contract.py`
-- [ ] T052 [P] [US1] Add Telegram launch and chat integration tests in `tests/integration/HermesDeck.IntegrationTests/TelegramChatFlowTests.cs`
-- [ ] T053 [P] [US1] Add frontend e2e test for launch, chat, stream, and run status in `tests/e2e/hermes-deck-web/chat-flow.spec.ts`
+- [x] T046 [P] [US1] Add Telegram session contract tests for `POST /auth/telegram` in `tests/contract/HermesDeck.Api.ContractTests/AuthEndpointContractTests.cs`
+- [x] T047 [P] [US1] Add conversation contract tests for `GET /conversations` and `POST /conversations` in `tests/contract/HermesDeck.Api.ContractTests/ConversationEndpointContractTests.cs`
+- [x] T048 [P] [US1] Add message submission contract tests for `POST /conversations/{conversationId}/messages` in `tests/contract/HermesDeck.Api.ContractTests/MessageEndpointContractTests.cs`
+- [x] T049 [P] [US1] Add run status contract tests for `GET /runs/{runId}` in `tests/contract/HermesDeck.Api.ContractTests/RunEndpointContractTests.cs`
+- [x] T050 [P] [US1] Add SSE chat event contract tests in `tests/contract/HermesDeck.Api.ContractTests/ChatSseContractTests.cs`
+- [x] T051 [P] [US1] Add Agent Service `ChatStream` contract tests in `src/agent-service/tests/test_chat_stream_contract.py`
+- [x] T052 [P] [US1] Add Telegram launch and chat integration tests in `tests/integration/HermesDeck.IntegrationTests/TelegramChatFlowTests.cs`
+- [x] T053 [P] [US1] Add frontend e2e test for launch, chat, stream, and run status in `tests/e2e/hermes-deck-web/chat-flow.spec.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T054 [US1] Implement Telegram launch validation in `src/HermesDeck.Api/Auth/TelegramLaunchValidator.cs`
-- [ ] T055 [US1] Implement Hermes identity mapping in `src/HermesDeck.Api/Auth/HermesIdentityMapper.cs`
-- [ ] T056 [US1] Implement session token issuing and validation in `src/HermesDeck.Api/Auth/SessionTokenService.cs`
-- [ ] T057 [US1] Implement `POST /auth/telegram` endpoint in `src/HermesDeck.Api/Auth/AuthEndpoints.cs`
-- [ ] T058 [US1] Implement conversation persistence service in `src/HermesDeck.Api/Conversations/ConversationService.cs`
-- [ ] T059 [US1] Implement conversation endpoints in `src/HermesDeck.Api/Conversations/ConversationEndpoints.cs`
-- [ ] T060 [US1] Implement message-to-run orchestration in `src/HermesDeck.Api/Runs/RunOrchestrator.cs`
-- [ ] T061 [US1] Implement run status endpoint in `src/HermesDeck.Api/Runs/RunEndpoints.cs`
-- [ ] T062 [US1] Implement SSE stream endpoint in `src/HermesDeck.Api/Events/SseEventStreamEndpoint.cs`
-- [ ] T063 [US1] Implement Agent Service `ChatStream` handler in `src/agent-service/app/grpc/chat_stream.py`
-- [ ] T064 [US1] Implement Agent Service run status handler in `src/agent-service/app/grpc/run_status.py`
-- [ ] T065 [US1] Implement Mini App Telegram launch bootstrap in `src/HermesDeck.Web/src/services/telegramLaunch.ts`
-- [ ] T066 [US1] Implement Mini App API client in `src/HermesDeck.Web/src/services/hermesApi.ts`
-- [ ] T067 [US1] Implement Mini App SSE client in `src/HermesDeck.Web/src/services/eventStream.ts`
-- [ ] T068 [US1] Implement conversation state store in `src/HermesDeck.Web/src/features/chat/chatStore.ts`
-- [ ] T069 [US1] Implement chat view in `src/HermesDeck.Web/src/features/chat/ChatView.tsx`
-- [ ] T070 [US1] Implement run status component in `src/HermesDeck.Web/src/features/runs/RunStatusBadge.tsx`
-- [ ] T071 [US1] Implement deep-link route handling in `src/HermesDeck.Web/src/app/routes.tsx`
-- [ ] T072 [US1] Add audit events for login, message submission, stream interruption, and deep-link denial in `src/HermesDeck.Api/Observability/AuditEventWriter.cs`
+- [x] T054 [US1] Implement Telegram launch validation in `src/HermesDeck.Api/Auth/TelegramLaunchValidator.cs`
+- [x] T055 [US1] Implement Hermes identity mapping in `src/HermesDeck.Api/Auth/HermesIdentityMapper.cs`
+- [x] T056 [US1] Implement session token issuing and validation in `src/HermesDeck.Api/Auth/SessionTokenService.cs`
+- [x] T057 [US1] Implement `POST /auth/telegram` endpoint in `src/HermesDeck.Api/Auth/AuthEndpoints.cs`
+- [x] T058 [US1] Implement conversation persistence service in `src/HermesDeck.Api/Conversations/ConversationService.cs`
+- [x] T059 [US1] Implement conversation endpoints in `src/HermesDeck.Api/Conversations/ConversationEndpoints.cs`
+- [x] T060 [US1] Implement message-to-run orchestration in `src/HermesDeck.Api/Runs/RunOrchestrator.cs`
+- [x] T061 [US1] Implement run status endpoint in `src/HermesDeck.Api/Runs/RunEndpoints.cs`
+- [x] T062 [US1] Implement SSE stream endpoint in `src/HermesDeck.Api/Events/SseEventStreamEndpoint.cs`
+- [x] T063 [US1] Implement Agent Service `ChatStream` handler in `src/agent-service/app/grpc/chat_stream.py`
+- [x] T064 [US1] Implement Agent Service run status handler in `src/agent-service/app/grpc/run_status.py`
+- [x] T065 [US1] Implement Mini App Telegram launch bootstrap in `src/HermesDeck.Web/src/services/telegramLaunch.ts`
+- [x] T066 [US1] Implement Mini App API client in `src/HermesDeck.Web/src/services/hermesApi.ts`
+- [x] T067 [US1] Implement Mini App SSE client in `src/HermesDeck.Web/src/services/eventStream.ts`
+- [x] T068 [US1] Implement conversation state store in `src/HermesDeck.Web/src/features/chat/chatStore.ts`
+- [x] T069 [US1] Implement chat view in `src/HermesDeck.Web/src/features/chat/ChatView.tsx`
+- [x] T070 [US1] Implement run status component in `src/HermesDeck.Web/src/features/runs/RunStatusBadge.tsx`
+- [x] T071 [US1] Implement deep-link route handling in `src/HermesDeck.Web/src/app/routes.tsx`
+- [x] T072 [US1] Add audit events for login, message submission, stream interruption, and deep-link denial in `src/HermesDeck.Api/Observability/AuditEventWriter.cs`
 
 **Checkpoint**: US1 is independently functional and testable.
 

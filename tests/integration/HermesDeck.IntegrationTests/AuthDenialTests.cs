@@ -59,9 +59,7 @@ public class AuthDenialTests : IClassFixture<HermesApiFixture>
         AssertNoProtectedDetails(body);
     }
 
-    [Fact(Skip =
-        "Pending T057 (Implement POST /auth/telegram endpoint): requires the real Telegram " +
-        "launch validation pipeline to assert 401 on invalid initData without leaking details.")]
+    [Fact]
     public async Task Invalid_Telegram_Launch_Data_Is_Rejected_With_401_And_No_Details()
     {
         using var client = _fixture.CreateClient();
@@ -76,9 +74,7 @@ public class AuthDenialTests : IClassFixture<HermesApiFixture>
         body.Should().NotContain("IdentityId");
     }
 
-    [Fact(Skip =
-        "Pending T056/T057 (session token issuing and POST /auth/telegram endpoint): requires " +
-        "a real session token format to assert that a missing/garbage bearer token is denied.")]
+    [Fact]
     public async Task Request_With_Invalid_Session_Token_Is_Denied_Without_Revealing_Resource_State()
     {
         using var client = _fixture.CreateClient();

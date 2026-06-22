@@ -145,6 +145,17 @@ paths:
     get:
       summary: Stream user-visible run, approval, and notification events
       operationId: streamEvents
+      parameters:
+        - name: conversationId
+          in: query
+          required: false
+          description: >-
+            Optional conversation to scope the stream to. The frontend opens a stream for the active
+            conversation; only events the current identity is authorized to see for that conversation
+            are delivered. A denial returns a generic error that never reveals whether the
+            conversation exists.
+          schema:
+            type: string
       responses:
         "200":
           description: Server-Sent Events stream
